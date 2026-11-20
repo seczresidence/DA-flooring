@@ -1,10 +1,10 @@
-# Retail Pulse · DATART
+# DA Flooring · DATART
 
 Týdenní přehled dostupnosti Samsung a konkurence v prodejnách DATART.
 
-- **Stránka:** https://seczresidence.github.io/retail-pulse/
+- **Stránka:** https://seczresidence.github.io/da-flooring/ (po přejmenování repozitáře na `da-flooring`)
 - **Zdroj dat:** Google Sheet „Flooring“, list `DA_Flooring` (čte se servisním účtem `ffm-download@ffm-kpi.iam.gserviceaccount.com`).
-- **Aktualizace:** každé pondělí ve 12:00 (Praha) automaticky. Ručně: záložka **Actions → Update Retail Pulse → Run workflow**.
+- **Aktualizace:** každé pondělí ve 12:00 (Praha) automaticky. Ručně: záložka **Actions → Update DA Flooring → Run workflow**.
 
 ## Jak to funguje
 1. GitHub Actions spustí `scripts/build.py`, který přečte sheet a vloží data do `template.html`.

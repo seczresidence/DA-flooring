@@ -1,4 +1,4 @@
-"""Build the Retail Pulse page from the Google Sheet "Flooring" (tab DA_Flooring).
+"""Build the DA Flooring page from the Google Sheet "Flooring" (tab DA_Flooring).
 
 Usage:
   GCP_SA_KEY='<service account JSON>' python scripts/build.py          # fetch from Google

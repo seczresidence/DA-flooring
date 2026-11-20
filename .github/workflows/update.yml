@@ -1,4 +1,4 @@
-name: Update Retail Pulse
+name: Update DA Flooring
 
 # Every Monday at 12:00 Prague time. GitHub schedules run in UTC, so both 10:05 and 11:05 UTC
 # are scheduled and the "gate" step lets through only the first run at or after 12:00 Prague
