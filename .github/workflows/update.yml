@@ -11,7 +11,7 @@ on:
   workflow_dispatch:        # "Run workflow" button for a manual refresh
   push:
     branches: [main]
-    paths: ["template.html", "scripts/**", "assets/**", ".github/workflows/**"]
+    paths: ["template.html", "scripts/**", "assets/**", ".github/workflows/**", "refresh.txt"]
 
 permissions:
   contents: write
