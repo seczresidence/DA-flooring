@@ -2,7 +2,7 @@
 
 Týdenní přehled dostupnosti Samsung a konkurence v prodejnách DATART.
 
-- **Stránka:** https://seczresidence.github.io/da-flooring/
+- **Stránka:** https://seczresidence.github.io/DA-flooring/
 - **Zdroj dat:** Google Sheet „Flooring“, list `DA_Flooring` (čte se servisním účtem `ffm-download@ffm-kpi.iam.gserviceaccount.com`).
 - **Aktualizace:** každé pondělí ve 12:00 (Praha) automaticky. Ručně: záložka **Actions → Update DA Flooring → Run workflow**.
 
