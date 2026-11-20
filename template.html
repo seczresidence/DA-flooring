@@ -147,7 +147,7 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 /* ===== CONFIG ===== */
 const CONFIG={
   /* priority SKUs = matrix columns, in this order. 'also' = other spellings of the same model */
-  prioritySkus:[{sku:'RB38C776ASREF'},{sku:'RB34C603CB1',also:['RB34C603CB1EF']},{sku:'WW90DG6U25LBU4'},{sku:'WW90DG6U85LKU4'},{sku:'DV90DG6845LBU4'},{sku:'DV90DG6845LKU4'}],
+  prioritySkus:[{sku:'RB38C776ASREF'},{sku:'RB34C603CB1',also:['RB34C603CB1EF']},{sku:'WW90DG6U25LBU4'},{sku:'DV90DG6845LBU4'}],
   skuAliases:{WW90DGU85LKU4:'WW90DG6U85LKU4'},   /* obvious typos in the sheet */
   stores:{
     C000045478:'Datart Brno Avion',C000045479:'Datart Brno Olympia',C000045472:'Datart Liberec Forum',
@@ -372,7 +372,7 @@ function cellDetail(store,pt){
 }
 function renderMatrix(){
   const wk=ST.wk,pw=prevWeek(wk),cur=matrixCells(wk),prev=pw?matrixCells(pw):null;
-  let h='<thead><tr><th>Store</th>'+CONFIG.prioritySkus.map(p=>'<th title="'+p.sku+(p.also?' / '+p.also.join(' / '):'')+'">'+p.sku.slice(0,p.sku.startsWith('DV')?10:8)+'<br>'+p.sku.slice(p.sku.startsWith('DV')?10:8)+'</th>').join('')+'</tr></thead><tbody>';
+  let h='<thead><tr><th>Store</th>'+CONFIG.prioritySkus.map(p=>'<th title="'+p.sku+(p.also?' / '+p.also.join(' / '):'')+'">'+p.sku+'</th>').join('')+'</tr></thead><tbody>';
   for(const s of reportedStores(wk)){h+='<tr><td class="store">'+esc(short(s))+'</td>';
     for(const f of CONFIG.prioritySkus.map(p=>p.sku)){const c=cur[s+'|'+f],S=STATE[c.s];let ar='';
       if(prev&&prev[s+'|'+f]){const q=prev[s+'|'+f];if(c.s!=='unk'&&q.s!=='unk'&&S.score!==STATE[q.s].score)ar='<span class="ar '+(S.score>STATE[q.s].score?'up':'dn')+'">'+(S.score>STATE[q.s].score?'▲':'▼')+'</span>'}
