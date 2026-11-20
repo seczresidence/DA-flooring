@@ -79,6 +79,8 @@ def main():
     out = ROOT / "site"
     out.mkdir(exist_ok=True)
     (out / "index.html").write_text(html.replace("__DATA__", payload), encoding="utf-8")
+    import shutil
+    shutil.copytree(ROOT / "assets", out / "assets", dirs_exist_ok=True)
     weeks = sorted({r[0] for r in rows if r[0]})
     print(f"Built site/index.html: {len(rows)} rows, weeks {', '.join(weeks)}, {now:%Y-%m-%d %H:%M} Prague")
 

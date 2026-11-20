@@ -10,6 +10,10 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-
 .wrap{max-width:1500px;margin:auto;padding-block:36px 90px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .eyebrow{color:var(--muted2);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:26px;align-self:stretch}
+.logos{display:flex;align-items:center;gap:28px}
+.logos img{height:20px;width:auto;display:block;opacity:.95}
+@media(max-width:700px){.topright{align-items:flex-start}.logos img{height:16px}}
 .top h1{font-size:32px;margin:10px 0 6px;letter-spacing:-1px}
 .muted{color:var(--muted)}.orange{color:var(--orange)}
 .updated{font-size:12px;color:var(--muted2);margin-top:6px}
@@ -89,7 +93,11 @@ details.method h3{font-size:13px;margin:20px 0 8px;color:var(--orange)}
 details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 #tip{position:fixed;z-index:50;max-width:360px;background:#0e1626;border:1px solid #34455e;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;box-shadow:0 8px 30px #000a;pointer-events:none;display:none}
 @media(max-width:1150px){.main{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.metrics{grid-template-columns:1fr}#matrix th,#matrix td{padding-inline:3px}#matrix th{font-size:8px;letter-spacing:0}#matrix .cell{min-width:36px;padding:0 3px}.wrap{padding-block:20px 60px}.top h1{font-size:25px}.panel{padding:16px}}
+@media(max-width:560px){.metrics{grid-template-columns:1fr}#matrix th,#matrix td{padding-inline:3px}#matrix th{font-size:8px;letter-spacing:0}#matrix .cell{min-width:36px;padding:0 3px}.wrap{padding-block:20px 60px}.topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:26px;align-self:stretch}
+.logos{display:flex;align-items:center;gap:28px}
+.logos img{height:20px;width:auto;display:block;opacity:.95}
+@media(max-width:700px){.topright{align-items:flex-start}.logos img{height:16px}}
+.top h1{font-size:25px}.panel{padding:16px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <main class="wrap">
@@ -97,7 +105,8 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <h1>DA Flooring <span class="orange" id="wkTitle"></span></h1>
 <div class="muted">Samsung availability &amp; competitive intelligence</div>
 <div class="updated" id="updated"></div></div>
-<div class="seg" id="wkSeg" role="group" aria-label="Reporting week"></div></header>
+<div class="topright"><div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
+<div class="seg" id="wkSeg" role="group" aria-label="Reporting week"></div></div></header>
 
 <div class="metrics" id="metrics"></div>
 
@@ -151,7 +160,7 @@ const fmtPct=(n,d=1)=>n==null?'—':n.toFixed(d).replace('.',',')+NB+'%';
 const fmtX=n=>n.toFixed(1).replace('.',',')+'×';
 const short=s=>s.replace(/^Datart /,'');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const catName=c=>c==='REF'?'refrigeration':'laundry';
+const catName=c=>c==='REF'?'refrigerator':'laundry';
 
 /* ===== DATA MODEL ===== */
 function parseNum(s){s=(s||'').trim();if(s===''||/^x$/i.test(s)||/^n\/a$/i.test(s))return null;
