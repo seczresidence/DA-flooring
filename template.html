@@ -40,7 +40,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th{color:#8ea0b7;font-size:10.5px;text-align:left;letter-spacing:.5px;text-transform:uppercase;background:var(--panel2);padding:11px 10px;white-space:nowrap;font-weight:700}
 td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
 #matrix th:not(:first-child),#matrix td:not(:first-child){text-align:center}
-#matrix td{padding:6px 10px}
+#matrix td{padding:6px 6px}
+#matrix th{letter-spacing:.3px;line-height:1.35;padding:10px 6px;text-transform:none;font-size:11px}
 .store{white-space:nowrap;font-weight:650}
 .cell{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;height:32px;border-radius:8px;font-weight:800;border:0;cursor:pointer;font-family:inherit;font-size:13px;line-height:1.05;padding:0 8px;position:relative}
 .cell small{font-size:9.5px;font-weight:700;opacity:.85}
@@ -145,7 +146,9 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <script>
 /* ===== CONFIG ===== */
 const CONFIG={
-  productTypes:['RB38C776','RB34C603','WW90DG6U','DV90DG6845'],
+  /* priority SKUs = matrix columns, in this order. 'also' = other spellings of the same model */
+  prioritySkus:[{sku:'RB38C776ASREF'},{sku:'RB34C603CB1',also:['RB34C603CB1EF']},{sku:'WW90DG6U25LBU4'},{sku:'WW90DG6U85LKU4'},{sku:'DV90DG6845LBU4'},{sku:'DV90DG6845LKU4'}],
+  skuAliases:{WW90DGU85LKU4:'WW90DG6U85LKU4'},   /* obvious typos in the sheet */
   stores:{
     C000045478:'Datart Brno Avion',C000045479:'Datart Brno Olympia',C000045472:'Datart Liberec Forum',
     C000045476:'Datart Liberec Géčko',C000045469:'Datart Liberec Nisa',C000045480:'Datart Olomouc Kafkova',
@@ -197,12 +200,13 @@ function buildModel(D){
     const brand=normBrand(ref||wm),o={wk,wn:order.indexOf(wk),gscm,store,brand,cat:ref?'REF':'WM',sku:(p[4]||'').trim(),
       typ:(p[5]||'').trim(),origRaw:(p[6]||'').trim(),orig:parseNum(p[6]),act:parseNum(p[7]),inc:parseNum(p[8])==null?null:parseNum(p[8])/CONFIG.incentiveDivisor,note:(p[9]||'').trim(),flags:[]};
     o.key=normKey(o.sku,brand);
-    o.pt=CONFIG.productTypes.find(f=>o.key.includes(f))||null;
+    if(CONFIG.skuAliases[o.key]){o.flags.push('SKU typo in the sheet (“'+o.key+'”), read as '+CONFIG.skuAliases[o.key]);o.key=CONFIG.skuAliases[o.key]}
+    o.pt=brand==='Samsung'?(CONFIG.prioritySkus.find(p=>p.sku===o.key||(p.also||[]).includes(o.key))||{}).sku||null:null;
     const txt=[p[6],p[7],p[8]].map(v=>(v||'').trim()).find(v=>v&&!/^(x|n\/a)$/i.test(v)&&parseNum(v)==null);
     if(txt){if(!o.note)o.note=txt;o.flags.push('Comment was typed in a price column; read as a comment')}
     if(!o.typ)o.flags.push('Placement (B / MB) left empty');
-    if(!o.pt&&brand==='Samsung'){const nf=CONFIG.productTypes.find(f=>[...f].some((_,i)=>o.key.startsWith(f.slice(0,i)+f.slice(i+1))));
-      if(nf){o.nearPt=nf;o.flags.push('Possible typo of product type '+nf+'; not matched automatically')}}
+    if(!o.pt&&brand==='Samsung'){const nf=CONFIG.prioritySkus.map(p=>p.sku).find(f=>[...f].some((_,i)=>o.key.startsWith(f.slice(0,i)+f.slice(i+1))));
+      if(nf){o.nearPt=nf;o.flags.push('Possible typo of priority SKU '+nf+'; not matched automatically')}}
     o.status=classify(o);
     if(/^n\/a$/i.test(o.origRaw)&&o.typ.toUpperCase()!=='N/A')o.flags.push('"N/A" typed in the price column');
     if(o.sku.toUpperCase().replace(/\s/g,'')!==o.key)o.flags.push('SKU carries a brand prefix; matched as '+o.key);
@@ -274,7 +278,7 @@ function cellState(rows){
   return{s,n,nOk,rows};
 }
 const reportedStores=wk=>M.stores.filter(s=>M.recs.some(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung'));
-function matrixCells(wk){const out={};for(const st of reportedStores(wk))for(const f of CONFIG.productTypes)out[st+'|'+f]=cellState(ptRows(wk,st,f));return out}
+function matrixCells(wk){const out={};for(const st of reportedStores(wk))for(const f of CONFIG.prioritySkus.map(p=>p.sku))out[st+'|'+f]=cellState(ptRows(wk,st,f));return out}
 function availKPI(wk){
   const cur=matrixCells(wk),rep=Object.entries(cur).filter(([,c])=>c.s!=='unk');
   const present=rep.filter(([,c])=>c.nOk>0).length,full=rep.filter(([,c])=>c.s==='ok').length;
@@ -341,7 +345,7 @@ function renderKPIs(){
   const tr=(x,u,good)=>x==null?'':'<span class="tr '+((good?x>0:x<0)?'up':x===0?'flat':'dn')+'">'+(x>0?'▲':x<0?'▼':'●')+' '+fmtInt(Math.abs(x))+u+'</span>';
   const c=[];
   c.push('<div class="metric"><span class="k">Product availability</span><b>'+(a.pct==null?'—':fmtPct(a.pct,0))+(a.trend?tr(a.trend.pp,' pp',true):'')+'</b><small>'+
-    (a.reported?a.present+' of '+a.reported+' reported store × product type cells have a model available. '+(a.total-a.reported?(a.total-a.reported)+' not reported.':''):'No Samsung rows this week.')+(a.trend?' Trend vs '+a.trend.pw+'.':'')+'</small></div>');
+    (a.reported?a.present+' of '+a.reported+' reported store × SKU cells available. '+(a.total-a.reported?(a.total-a.reported)+' not reported.':''):'No Samsung rows this week.')+(a.trend?' Trend vs '+a.trend.pw+'.':'')+'</small></div>');
   c.push('<div class="metric"><span class="k">Availability gaps</span><b>'+g.total+(g.trend?tr(g.trend.d,'',false):'')+'</b><small>Priority models: '+g.na.length+' N/A, '+g.bl.length+' blank or x'+(g.st.length?', '+g.st.length+' stock only':'')+'.</small></div>');
   c.push('<div class="metric"><span class="k">Highest Samsung incentive</span><b>'+(pri?fmtKc(pri.inc):'—')+'</b><small>'+(pri?'Priority models: '+esc(pri.key)+', '+esc(short(pri.store))+'.':'No priority incentive reported.')+(all&&pri&&all.inc>pri.inc?' All Samsung: '+fmtKc(all.inc)+' ('+esc(all.key)+').':'')+'</small></div>');
   c.push('<div class="metric"><span class="k">Competitor pressure'+(cw?' · '+cw:'')+'</span><b>'+(p?fmtKc(p.top.v):'—')+(p&&p.mult?'<span class="tr dn">'+fmtX(p.mult)+' Samsung</span>':'')+'</b><small>'+
@@ -352,7 +356,7 @@ function cellDetail(store,pt){
   const wk=ST.wk,pw=prevWeek(wk),c=cellState(ptRows(wk,store,pt));
   let h='<b>'+esc(short(store))+' · '+pt+'</b> · '+wk+' · <span class="chip '+c.s+'">'+STATE[c.s].label+'</span>';
   if(!c.n){const last=M.recs.filter(o=>o.store===store&&o.pt===pt&&o.brand==='Samsung'&&o.wn<M.weeks.indexOf(wk)).sort((a,b)=>b.wn-a.wn)[0];
-    h+='<div class="vr">No rows for this store and product type in '+wk+'. Missing reporting, not a confirmed gap.</div>';
+    h+='<div class="vr">No row for this store and SKU in '+wk+'. Missing reporting, not a confirmed gap.</div>';
     if(last)h+='<div class="vr">Last report '+last.wk+': '+STATE[cellState(ptRows(last.wk,store,pt)).s].label+'.</div>';return h}
   for(const r of c.rows){
     const p=pw?M.recs.find(o=>o.wk===pw&&o.store===store&&o.key===r.key&&o.brand==='Samsung'):null;
@@ -368,15 +372,15 @@ function cellDetail(store,pt){
 }
 function renderMatrix(){
   const wk=ST.wk,pw=prevWeek(wk),cur=matrixCells(wk),prev=pw?matrixCells(pw):null;
-  let h='<thead><tr><th>Store</th>'+CONFIG.productTypes.map(f=>'<th>'+f+'</th>').join('')+'</tr></thead><tbody>';
+  let h='<thead><tr><th>Store</th>'+CONFIG.prioritySkus.map(p=>'<th title="'+p.sku+(p.also?' / '+p.also.join(' / '):'')+'">'+p.sku.slice(0,p.sku.startsWith('DV')?10:8)+'<br>'+p.sku.slice(p.sku.startsWith('DV')?10:8)+'</th>').join('')+'</tr></thead><tbody>';
   for(const s of reportedStores(wk)){h+='<tr><td class="store">'+esc(short(s))+'</td>';
-    for(const f of CONFIG.productTypes){const c=cur[s+'|'+f],S=STATE[c.s];let ar='';
+    for(const f of CONFIG.prioritySkus.map(p=>p.sku)){const c=cur[s+'|'+f],S=STATE[c.s];let ar='';
       if(prev&&prev[s+'|'+f]){const q=prev[s+'|'+f];if(c.s!=='unk'&&q.s!=='unk'&&S.score!==STATE[q.s].score)ar='<span class="ar '+(S.score>STATE[q.s].score?'up':'dn')+'">'+(S.score>STATE[q.s].score?'▲':'▼')+'</span>'}
       h+='<td><button class="cell '+S.cls+'" data-s="'+esc(s)+'" data-f="'+f+'" aria-label="'+esc(short(s)+' '+f+': '+S.label)+'">'+S.icon+(c.n>1?'<small>'+c.nOk+'/'+c.n+'</small>':'')+ar+'</button></td>'}
     h+='</tr>'}
   $('matrix').innerHTML=h+'</tbody>';
   const a=availKPI(wk);
-  $('matrixSub').textContent='Columns are the priority product types. Stores that did not report in '+wk+' are hidden. '+a.reported+' of '+a.total+' cells reported'+(pw?'; arrows compare with '+pw:'')+'. 2/2 = available models / reported models of that product type.';
+  $('matrixSub').textContent='Columns are the priority SKUs. Stores that did not report in '+wk+' are hidden. '+a.reported+' of '+a.total+' cells reported'+(pw?'; arrows compare with '+pw:'')+'.';
   $('cellDetail').innerHTML='Click a cell for the exact SKU, status, store comment and the change since the previous week.';
 }
 function renderComp(){
@@ -435,7 +439,7 @@ function renderStoreTable(){
   const wk=$('weekFilter').value,b=$('brandFilter').value,q=$('search').value.trim().toLowerCase(),issues=$('issuesOnly').checked;
   const rows=M.recs.filter(o=>o.wk===wk&&(!ST.store||o.store===ST.store)&&(!b||(b==='comp'?o.brand!=='Samsung':o.brand===b))&&
     (!issues||o.status!=='ok'||o.note||o.flags.length)&&(!q||(o.brand+' '+o.sku+' '+o.key+' '+o.note).toLowerCase().includes(q)));
-  const cols=['Brand','SKU','Product type','Placement','Status','Original','Action','Discount','Incentive (Kč)','Store comment',''];
+  const cols=['Brand','SKU','Priority','Placement','Status','Original','Action','Discount','Incentive (Kč)','Store comment',''];
   let h='<thead><tr>'+cols.map((c,i)=>'<th'+(i>=5&&i<=8?' class="r"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>';
   const stores=M.stores.filter(s=>rows.some(o=>o.store===s));
   for(const s of stores){
@@ -445,7 +449,7 @@ function renderStoreTable(){
     let lastCat=null,lastSam=null;
     for(const o of r){const isS=o.brand==='Samsung';
       if(isS!==lastSam||o.cat!==lastCat){h+='<tr class="cat"><td colspan="11">'+(isS?'Samsung':'Competitors')+' · '+catName(o.cat)+'</td></tr>';lastCat=o.cat;lastSam=isS}
-      h+='<tr'+(isS?' class="sam"':'')+'><td>'+esc(o.brand)+'</td><td><b>'+esc(o.sku)+'</b></td><td>'+(o.pt?'<span class="chip">'+o.pt+'</span>':'<span class="tiny">—</span>')+'</td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
+      h+='<tr'+(isS?' class="sam"':'')+'><td>'+esc(o.brand)+'</td><td><b>'+esc(o.sku)+'</b></td><td>'+(o.pt?'<span class="chip ok">Priority</span>':'<span class="tiny">—</span>')+'</td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
         '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r'+(o.disc>=25?' hl':'')+'">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
         '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td><td>'+(o.flags.length?'<span class="flag" title="'+esc(o.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>'}
   }
@@ -465,8 +469,8 @@ function renderMethod(){
   const near=[...new Set(M.recs.filter(o=>o.nearPt).map(o=>o.key+' → '+o.nearPt+'?'))];
   $('methodBody').innerHTML=
    '<h3>Rules</h3><ul>'+
-   '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only (amber). Blank or x with no figures = not present. No row for a store and product type = not reported (grey, never red).</li>'+
-   '<li>Stores are matched by GSCM ID. Product types are matched by partial SKU text: '+CONFIG.productTypes.join(', ')+'. A cell is green when every reported model is available, red when none is, amber when they differ or only stock exists.</li>'+
+   '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only (amber). Blank or x with no figures = not present. No row for a store and SKU = not reported (grey, never red).</li>'+
+   '<li>Stores are matched by GSCM ID. Priority SKUs (matrix columns): '+CONFIG.prioritySkus.map(p=>p.sku+(p.also?' (also '+p.also.join(', ')+')':'')).join(', ')+'. Known typos read as the correct SKU: '+Object.entries(CONFIG.skuAliases).map(([a,b])=>a+' → '+b).join(', ')+'. A cell is green when the SKU is available, red when not, amber for stock only.</li>'+
    '<li>Availability = cells with at least one available model / reported cells. Trends compare only cells reported in both weeks. Weeks are ordered by number, and W01, W02… after W52 count as the next year.</li>'+
    '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+', which converts it to the money reward in CZK.</li>'+
    '<li>Discount = (original − action) / original. Incentive vs price = incentive / action price. Discount (shelf) and incentive (salesperson) are never combined.</li>'+
@@ -477,7 +481,7 @@ function renderMethod(){
    (L.dupConflict.length?'<li>Listed twice, once with figures and once without: '+L.dupConflict.map(o=>esc(o.wk+' '+short(o.store)+' '+o.key)).join(', ')+'. Kept as available. Please confirm.</li>':'')+
    (L.bulkBlank.length?'<li>Whole-store blank reports: '+L.bulkBlank.map(b=>esc(b.wk+' '+short(b.store))).join('; ')+'. Counted as not present but probably a reporting gap.</li>':'')+
    (typos.length?'<li>Probable price typos, excluded from discounts: '+typos.map(esc).join('; ')+'.</li>':'')+
-   (near.length?'<li>Possible SKU typos not matched to a product type: '+near.map(esc).join('; ')+'.</li>':'')+
+   (near.length?'<li>Possible SKU typos not matched to a priority SKU: '+near.map(esc).join('; ')+'.</li>':'')+
    (L.newStores.length?'<li>Stores not in the store list, added by GSCM: '+L.newStores.map(esc).join('; ')+'.</li>':'')+
    '</ul><h3>Coverage by store and week</h3>'+cov;
 }
