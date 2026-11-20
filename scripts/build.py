@@ -45,6 +45,19 @@ def fetch_values():
     return list(csv.reader(io.StringIO(r2.content.decode("utf-8"))))
 
 
+def encrypt(text, password):
+    """AES-256-GCM with a key from PBKDF2-SHA256; the page decrypts it in the browser."""
+    import base64, secrets
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    salt, iv, iterations = secrets.token_bytes(16), secrets.token_bytes(12), 250_000
+    key = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=iterations).derive(password.encode())
+    ct = AESGCM(key).encrypt(iv, text.encode(), None)
+    b = lambda x: base64.b64encode(x).decode()
+    return json.dumps({"enc": 1, "iter": iterations, "salt": b(salt), "iv": b(iv), "ct": b(ct)})
+
+
 def normalise(values):
     if not values:
         sys.exit("The sheet is empty.")
@@ -72,8 +85,14 @@ def main():
         values = fetch_values()
     rows = normalise(values)
     now = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Prague"))
-    payload = json.dumps({"updated": now.strftime("%-d. %-m. %Y %H:%M"), "rows": rows},
-                         ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    data = json.dumps({"updated": now.strftime("%-d. %-m. %Y %H:%M"), "rows": rows},
+                      ensure_ascii=False, separators=(",", ":"))
+    password = os.environ.get("PAGE_PASSWORD", "")
+    if password:
+        data = encrypt(data, password)
+    elif os.environ.get("GITHUB_ACTIONS"):
+        sys.exit("Secret PAGE_PASSWORD is not set; refusing to publish the data without a password.")
+    payload = data.replace("</", "<\\/")
     html = (ROOT / "template.html").read_text(encoding="utf-8")
     assert "__DATA__" in html
     out = ROOT / "site"

@@ -14,6 +14,15 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-
 .logos{display:flex;align-items:center;gap:28px}
 .logos img{height:20px;width:auto;display:block;opacity:.95}
 @media(max-width:700px){.topright{align-items:flex-start}.logos img{height:16px}}
+#lock{min-height:100vh;display:grid;place-items:center;padding:20px}
+.lockbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:36px 40px;width:min(420px,100%);display:flex;flex-direction:column;gap:12px}
+.lockbox .logos{margin-bottom:18px}
+.lockbox h1{margin:0;font-size:28px;letter-spacing:-.5px}.lockbox p{margin:0 0 10px}
+.lockbox .lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px}
+.lockbox input{background:var(--panel2);color:var(--fg);border:1px solid #33425b;border-radius:9px;padding:12px;font:inherit}
+.lockbox button{padding:11px 14px;margin-top:6px}
+.lockerr{color:var(--bad);font-size:13px;min-height:20px}
+[hidden]{display:none!important}
 .top h1{font-size:32px;margin:10px 0 6px;letter-spacing:-1px}
 .muted{color:var(--muted)}.orange{color:var(--orange)}
 .updated{font-size:12px;color:var(--muted2);margin-top:6px}
@@ -101,7 +110,14 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 .top h1{font-size:25px}.panel{padding:16px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-<main class="wrap">
+<div id="lock" hidden><form class="lockbox" id="lockForm" autocomplete="off">
+<div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
+<h1>DA Flooring</h1><p class="muted">This report is password protected.</p>
+<label for="pw" class="lbl">Password</label>
+<input id="pw" type="password" autocomplete="current-password" required autofocus>
+<button class="pill active" type="submit" id="pwBtn">Open report</button>
+<div class="lockerr" id="pwErr" role="alert"></div></form></div>
+<main class="wrap" id="app">
 <header class="top"><div><div class="eyebrow">Cheil · Retail intelligence / DATART</div>
 <h1>DA Flooring <span class="orange" id="wkTitle"></span></h1>
 <div class="muted">Samsung availability &amp; competitive intelligence</div>
@@ -491,8 +507,8 @@ function showTip(btn,e){const t=$('tip');t.innerHTML=cellDetail(btn.dataset.s,bt
 function moveTip(e){const t=$('tip'),w=t.offsetWidth,h=t.offsetHeight;let x=e.clientX+14,y=e.clientY+14;
   if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=Math.max(8,innerHeight-h-8);t.style.left=Math.max(8,x)+'px';t.style.top=y+'px'}
 function renderTop(){renderHeader();renderKPIs();renderMatrix();renderComp();renderInsights()}
-function start(){
-  M=buildModel(JSON.parse($('raw-data').textContent));
+function start(D){
+  M=buildModel(D);
   ST={wk:M.samWeeks[M.samWeeks.length-1],store:''};
   $('weekFilter').innerHTML=M.weeks.slice().reverse().map(w=>'<option value="'+w+'">'+w+'</option>').join('');
   $('weekFilter').value=ST.wk;
@@ -506,6 +522,26 @@ function start(){
   $('matrix').onmouseout=e=>{if(e.target.closest('.cell'))$('tip').style.display='none'};
   renderTop();renderStoreChips();renderStoreTable();renderMethod();
 }
-start();
+/* ===== PASSWORD (data are AES-GCM encrypted at build time; key from PBKDF2-SHA256) ===== */
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(E,pw){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(E.salt),iterations:E.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(E.iv)},key,b64(E.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function boot(){
+  const E=JSON.parse($('raw-data').textContent);
+  if(!E.enc){start(E);return}
+  $('app').hidden=true;$('lock').hidden=false;
+  const open=async pw=>{const D=await decrypt(E,pw);$('lock').hidden=true;$('app').hidden=false;start(D);
+    try{sessionStorage.setItem('daf-pw',pw)}catch(e){}};
+  try{const saved=sessionStorage.getItem('daf-pw');if(saved){try{await open(saved);return}catch(e){sessionStorage.removeItem('daf-pw')}}}catch(e){}
+  $('pw').focus();
+  $('lockForm').onsubmit=async e=>{e.preventDefault();$('pwErr').textContent='';$('pwBtn').disabled=true;
+    try{await open($('pw').value)}catch(err){$('pwErr').textContent='Wrong password. Please try again.';$('pw').select()}
+    $('pwBtn').disabled=false};
+}
+boot();
 </script>
 </body></html>

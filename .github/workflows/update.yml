@@ -48,8 +48,9 @@ jobs:
         if: steps.gate.outputs.go == 'true'
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          PAGE_PASSWORD: ${{ secrets.PAGE_PASSWORD }}
         run: |
-          pip install --quiet google-auth requests
+          pip install --quiet google-auth requests cryptography
           python scripts/build.py
 
       - uses: actions/upload-pages-artifact@v3
