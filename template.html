@@ -151,11 +151,13 @@ const CONFIG={
     C000045476:'Datart Liberec Géčko',C000045469:'Datart Liberec Nisa',C000045480:'Datart Olomouc Kafkova',
     C000057880:'Datart Ostrava Avion',C000045473:'Datart Praha Zlicin',C000057886:'Datart Teplice',C000045475:'Datart Čestlice'},
   prefix:{Samsung:'SAM',LG:'LGG',Bosch:'BOS',Haier:'HAR',AEG:'AEG'},
+  incentiveDivisor:10,   /* the sheet's incentive value / 10 = reward in CZK */
   outlierRatio:2,maxDiscount:60,highDiscountNote:35
 };
 const NB=' ';
 const fmtInt=n=>n==null?'—':Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,NB);
-const fmtKc=n=>n==null?'—':fmtInt(n)+NB+'Kč';
+const fmtNum=n=>n==null?'—':Number.isInteger(Math.round(n*10)/10)?fmtInt(n):(n<0?'−':'')+fmtInt(Math.floor(Math.abs(n)))+','+Math.round(Math.abs(n)*10)%10;
+const fmtKc=n=>n==null?'—':fmtNum(n)+NB+'Kč';
 const fmtPct=(n,d=1)=>n==null?'—':n.toFixed(d).replace('.',',')+NB+'%';
 const fmtX=n=>n.toFixed(1).replace('.',',')+'×';
 const short=s=>s.replace(/^Datart /,'');
@@ -193,7 +195,7 @@ function buildModel(D){
     const store=stores[gscm]||storeRaw;
     if(store!==storeRaw)(log.aliases[store]=log.aliases[store]||new Set()).add(storeRaw);
     const brand=normBrand(ref||wm),o={wk,wn:order.indexOf(wk),gscm,store,brand,cat:ref?'REF':'WM',sku:(p[4]||'').trim(),
-      typ:(p[5]||'').trim(),origRaw:(p[6]||'').trim(),orig:parseNum(p[6]),act:parseNum(p[7]),inc:parseNum(p[8]),note:(p[9]||'').trim(),flags:[]};
+      typ:(p[5]||'').trim(),origRaw:(p[6]||'').trim(),orig:parseNum(p[6]),act:parseNum(p[7]),inc:parseNum(p[8])==null?null:parseNum(p[8])/CONFIG.incentiveDivisor,note:(p[9]||'').trim(),flags:[]};
     o.key=normKey(o.sku,brand);
     o.pt=CONFIG.productTypes.find(f=>o.key.includes(f))||null;
     const txt=[p[6],p[7],p[8]].map(v=>(v||'').trim()).find(v=>v&&!/^(x|n\/a)$/i.test(v)&&parseNum(v)==null);
@@ -245,7 +247,7 @@ function buildModel(D){
     if(!peers.length||peers.some(r=>trip(r)===t))continue;
     const old=recs.find(r=>r.wn<o.wn&&r.key===o.key&&r.brand===o.brand&&trip(r)===t);
     if(old){o.stale=old;log.stale.push(o);
-      o.flags.push('Figures identical to '+old.wk+' '+short(old.store)+' while other stores report '+[...new Set(peers.map(r=>fmtInt(r.act)+' / '+fmtInt(r.inc)))].join(', ')+' this week; probably carried over. Left out of competitor highlights.')}}
+      o.flags.push('Figures identical to '+old.wk+' '+short(old.store)+' while other stores report '+[...new Set(peers.map(r=>fmtInt(r.act)+' / '+fmtNum(r.inc)))].join(', ')+' this week; probably carried over. Left out of competitor highlights.')}}
   /* store-weeks that are entirely blank */
   const sw=new Map();for(const o of recs){const k=o.wk+'|'+o.store;const s=sw.get(k)||sw.set(k,{ok:0,blank:0,rows:[]}).get(k);
     if(o.status==='ok')s.ok++;if(o.status==='blank')s.blank++;s.rows.push(o)}
@@ -356,7 +358,7 @@ function cellDetail(store,pt){
     const p=pw?M.recs.find(o=>o.wk===pw&&o.store===store&&o.key===r.key&&o.brand==='Samsung'):null;
     let chg='';
     if(p){if(p.status==='ok'&&r.status!=='ok')chg='<span class="dn">New gap since '+pw+'.</span> ';else if(p.status!=='ok'&&p.status!=='stock'&&r.status==='ok')chg='<span class="up">Back since '+pw+'.</span> ';
-      if(p.inc!=null&&r.inc!=null&&p.inc!==r.inc)chg+='Incentive '+fmtInt(p.inc)+' → '+fmtInt(r.inc)+' Kč. ';}
+      if(p.inc!=null&&r.inc!=null&&p.inc!==r.inc)chg+='Incentive '+fmtNum(p.inc)+' → '+fmtKc(r.inc)+'. ';}
     h+='<div class="vr"><b>'+esc(r.sku)+'</b> ['+esc(r.typ||'—')+'] · '+ROWSTAT[r.status]+
       (r.status==='ok'?' · '+fmtKc(r.orig)+(r.act?' → '+fmtKc(r.act):'')+(r.inc!=null?' · incentive '+fmtKc(r.inc):''):'')+
       (r.note?'<br><span class="cz">„'+esc(r.note)+'“</span>':'')+
@@ -433,7 +435,7 @@ function renderStoreTable(){
   const wk=$('weekFilter').value,b=$('brandFilter').value,q=$('search').value.trim().toLowerCase(),issues=$('issuesOnly').checked;
   const rows=M.recs.filter(o=>o.wk===wk&&(!ST.store||o.store===ST.store)&&(!b||(b==='comp'?o.brand!=='Samsung':o.brand===b))&&
     (!issues||o.status!=='ok'||o.note||o.flags.length)&&(!q||(o.brand+' '+o.sku+' '+o.key+' '+o.note).toLowerCase().includes(q)));
-  const cols=['Brand','SKU','Product type','Placement','Status','Original','Action','Discount','Incentive','Store comment',''];
+  const cols=['Brand','SKU','Product type','Placement','Status','Original','Action','Discount','Incentive (Kč)','Store comment',''];
   let h='<thead><tr>'+cols.map((c,i)=>'<th'+(i>=5&&i<=8?' class="r"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>';
   const stores=M.stores.filter(s=>rows.some(o=>o.store===s));
   for(const s of stores){
@@ -444,7 +446,7 @@ function renderStoreTable(){
     for(const o of r){const isS=o.brand==='Samsung';
       if(isS!==lastSam||o.cat!==lastCat){h+='<tr class="cat"><td colspan="11">'+(isS?'Samsung':'Competitors')+' · '+catName(o.cat)+'</td></tr>';lastCat=o.cat;lastSam=isS}
       h+='<tr'+(isS?' class="sam"':'')+'><td>'+esc(o.brand)+'</td><td><b>'+esc(o.sku)+'</b></td><td>'+(o.pt?'<span class="chip">'+o.pt+'</span>':'<span class="tiny">—</span>')+'</td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
-        '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r'+(o.disc>=25?' hl':'')+'">'+fmtPct(o.disc)+'</td><td class="r">'+fmtInt(o.inc)+'</td>'+
+        '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r'+(o.disc>=25?' hl':'')+'">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
         '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td><td>'+(o.flags.length?'<span class="flag" title="'+esc(o.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>'}
   }
   $('storeTbl').innerHTML=h+'</tbody>';
@@ -466,6 +468,7 @@ function renderMethod(){
    '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only (amber). Blank or x with no figures = not present. No row for a store and product type = not reported (grey, never red).</li>'+
    '<li>Stores are matched by GSCM ID. Product types are matched by partial SKU text: '+CONFIG.productTypes.join(', ')+'. A cell is green when every reported model is available, red when none is, amber when they differ or only stock exists.</li>'+
    '<li>Availability = cells with at least one available model / reported cells. Trends compare only cells reported in both weeks. Weeks are ordered by number, and W01, W02… after W52 count as the next year.</li>'+
+   '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+', which converts it to the money reward in CZK.</li>'+
    '<li>Discount = (original − action) / original. Incentive vs price = incentive / action price. Discount (shelf) and incentive (salesperson) are never combined.</li>'+
    '<li>Store comments are shown exactly as written. Numbers: space for thousands, comma for decimals.</li></ul>'+
    '<h3>Checks on this data</h3><ul>'+
