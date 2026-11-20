@@ -1,0 +1,83 @@
+name: Update Retail Pulse
+
+# Every Monday at 12:00 Prague time. GitHub schedules run in UTC, so both 10:05 and 11:05 UTC
+# are scheduled and the "gate" step lets through only the first run at or after 12:00 Prague
+# (summer time: 10:05 UTC, winter time: 11:05 UTC).
+on:
+  schedule:
+    - cron: "5 10 * * 1"
+    - cron: "5 11 * * 1"
+  workflow_dispatch:        # "Run workflow" button for a manual refresh
+  push:
+    branches: [main]
+    paths: ["template.html", "scripts/**", ".github/workflows/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.gate.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gate (Monday 12:00 Prague, once per day)
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          H=$(TZ=Europe/Prague date +%H); TODAY=$(TZ=Europe/Prague date +%F)
+          LAST=$(cut -c1-10 last_run.txt 2>/dev/null || true)
+          if [ $((10#$H)) -ge 12 ] && [ "$LAST" != "$TODAY" ]; then echo "go=true" >> "$GITHUB_OUTPUT"
+          else echo "go=false" >> "$GITHUB_OUTPUT"; echo "Skipped: Prague hour $H, last run $LAST"; fi
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Build page from the Google Sheet
+        if: steps.gate.outputs.go == 'true'
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          pip install --quiet google-auth requests
+          python scripts/build.py
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.gate.outputs.go == 'true'
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Records the run time in the repo (no data). This also keeps the weekly schedule alive:
+  # GitHub pauses schedules in public repos after 60 days without commits.
+  stamp:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          TZ=Europe/Prague date "+%F %H:%M Prague, run ${{ github.run_number }} (${{ github.event_name }})" > last_run.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add last_run.txt
+          git commit -m "Page refreshed $(TZ=Europe/Prague date +%F)" || exit 0
+          git push
