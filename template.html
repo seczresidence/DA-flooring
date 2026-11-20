@@ -136,7 +136,7 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <script>
 /* ===== CONFIG ===== */
 const CONFIG={
-  productTypes:['WW90DG6U','RB34C603','RB38C776','DV90DG6845'],
+  productTypes:['RB38C776','RB34C603','WW90DG6U','DV90DG6845'],
   stores:{
     C000045478:'Datart Brno Avion',C000045479:'Datart Brno Olympia',C000045472:'Datart Liberec Forum',
     C000045476:'Datart Liberec Géčko',C000045469:'Datart Liberec Nisa',C000045480:'Datart Olomouc Kafkova',
@@ -262,20 +262,21 @@ function cellState(rows){
   const s=nOk>0&&nAbs===0&&nStock===0?'ok':(nOk>0||nStock>0)?'warn':'bad';
   return{s,n,nOk,rows};
 }
-function matrixCells(wk){const out={};for(const st of M.stores)for(const f of CONFIG.productTypes)out[st+'|'+f]=cellState(ptRows(wk,st,f));return out}
+const reportedStores=wk=>M.stores.filter(s=>M.recs.some(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung'));
+function matrixCells(wk){const out={};for(const st of reportedStores(wk))for(const f of CONFIG.productTypes)out[st+'|'+f]=cellState(ptRows(wk,st,f));return out}
 function availKPI(wk){
   const cur=matrixCells(wk),rep=Object.entries(cur).filter(([,c])=>c.s!=='unk');
   const present=rep.filter(([,c])=>c.nOk>0).length,full=rep.filter(([,c])=>c.s==='ok').length;
   const res={reported:rep.length,total:Object.keys(cur).length,present,full,pct:rep.length?present/rep.length*100:null,trend:null};
   const pw=prevWeek(wk);
-  if(pw){const prev=matrixCells(pw),common=rep.filter(([k])=>prev[k].s!=='unk');
+  if(pw){const prev=matrixCells(pw),common=rep.filter(([k])=>prev[k]&&prev[k].s!=='unk');
     if(common.length)res.trend={pp:common.filter(([,c])=>c.nOk>0).length/common.length*100-common.filter(([k])=>prev[k].nOk>0).length/common.length*100,n:common.length,pw}}
   return res;
 }
 function gapKPI(wk){
   const rows=samRows(wk).filter(o=>o.pt),na=rows.filter(o=>o.status==='na'),bl=rows.filter(o=>o.status==='blank'),st=rows.filter(o=>o.status==='stock');
   const res={na,bl,st,total:na.length+bl.length,trend:null},pw=prevWeek(wk);
-  if(pw){const cur=matrixCells(wk),prev=matrixCells(pw),keys=Object.keys(cur).filter(k=>cur[k].s!=='unk'&&prev[k].s!=='unk');
+  if(pw){const cur=matrixCells(wk),prev=matrixCells(pw),keys=Object.keys(cur).filter(k=>cur[k].s!=='unk'&&prev[k]&&prev[k].s!=='unk');
     const g=c=>c.rows.filter(r=>r.status==='na'||r.status==='blank').length;
     if(keys.length)res.trend={d:keys.reduce((a,k)=>a+g(cur[k])-g(prev[k]),0),pw}}
   return res;
@@ -329,7 +330,7 @@ function renderKPIs(){
   const tr=(x,u,good)=>x==null?'':'<span class="tr '+((good?x>0:x<0)?'up':x===0?'flat':'dn')+'">'+(x>0?'▲':x<0?'▼':'●')+' '+fmtInt(Math.abs(x))+u+'</span>';
   const c=[];
   c.push('<div class="metric"><span class="k">Product availability</span><b>'+(a.pct==null?'—':fmtPct(a.pct,0))+(a.trend?tr(a.trend.pp,' pp',true):'')+'</b><small>'+
-    (a.reported?a.present+' of '+a.reported+' reported store × product type cells have a model available. '+(a.total-a.reported)+' not reported.':'No Samsung rows this week.')+(a.trend?' Trend vs '+a.trend.pw+'.':'')+'</small></div>');
+    (a.reported?a.present+' of '+a.reported+' reported store × product type cells have a model available. '+(a.total-a.reported?(a.total-a.reported)+' not reported.':''):'No Samsung rows this week.')+(a.trend?' Trend vs '+a.trend.pw+'.':'')+'</small></div>');
   c.push('<div class="metric"><span class="k">Availability gaps</span><b>'+g.total+(g.trend?tr(g.trend.d,'',false):'')+'</b><small>Priority models: '+g.na.length+' N/A, '+g.bl.length+' blank or x'+(g.st.length?', '+g.st.length+' stock only':'')+'.</small></div>');
   c.push('<div class="metric"><span class="k">Highest Samsung incentive</span><b>'+(pri?fmtKc(pri.inc):'—')+'</b><small>'+(pri?'Priority models: '+esc(pri.key)+', '+esc(short(pri.store))+'.':'No priority incentive reported.')+(all&&pri&&all.inc>pri.inc?' All Samsung: '+fmtKc(all.inc)+' ('+esc(all.key)+').':'')+'</small></div>');
   c.push('<div class="metric"><span class="k">Competitor pressure'+(cw?' · '+cw:'')+'</span><b>'+(p?fmtKc(p.top.v):'—')+(p&&p.mult?'<span class="tr dn">'+fmtX(p.mult)+' Samsung</span>':'')+'</b><small>'+
@@ -357,14 +358,14 @@ function cellDetail(store,pt){
 function renderMatrix(){
   const wk=ST.wk,pw=prevWeek(wk),cur=matrixCells(wk),prev=pw?matrixCells(pw):null;
   let h='<thead><tr><th>Store</th>'+CONFIG.productTypes.map(f=>'<th>'+f+'</th>').join('')+'</tr></thead><tbody>';
-  for(const s of M.stores){h+='<tr><td class="store">'+esc(short(s))+'</td>';
+  for(const s of reportedStores(wk)){h+='<tr><td class="store">'+esc(short(s))+'</td>';
     for(const f of CONFIG.productTypes){const c=cur[s+'|'+f],S=STATE[c.s];let ar='';
-      if(prev){const q=prev[s+'|'+f];if(c.s!=='unk'&&q.s!=='unk'&&S.score!==STATE[q.s].score)ar='<span class="ar '+(S.score>STATE[q.s].score?'up':'dn')+'">'+(S.score>STATE[q.s].score?'▲':'▼')+'</span>'}
+      if(prev&&prev[s+'|'+f]){const q=prev[s+'|'+f];if(c.s!=='unk'&&q.s!=='unk'&&S.score!==STATE[q.s].score)ar='<span class="ar '+(S.score>STATE[q.s].score?'up':'dn')+'">'+(S.score>STATE[q.s].score?'▲':'▼')+'</span>'}
       h+='<td><button class="cell '+S.cls+'" data-s="'+esc(s)+'" data-f="'+f+'" aria-label="'+esc(short(s)+' '+f+': '+S.label)+'">'+S.icon+(c.n>1?'<small>'+c.nOk+'/'+c.n+'</small>':'')+ar+'</button></td>'}
     h+='</tr>'}
   $('matrix').innerHTML=h+'</tbody>';
   const a=availKPI(wk);
-  $('matrixSub').textContent='Columns are the priority product types. '+a.reported+' of '+a.total+' store × product type cells reported in '+wk+(pw?'; arrows compare with '+pw:'')+'.';
+  $('matrixSub').textContent='Columns are the priority product types. Stores that did not report in '+wk+' are hidden. '+a.reported+' of '+a.total+' cells reported'+(pw?'; arrows compare with '+pw:'')+'. 2/2 = available models / reported models of that product type.';
   $('cellDetail').innerHTML='Click a cell for the exact SKU, status, store comment and the change since the previous week.';
 }
 function renderComp(){
@@ -406,7 +407,7 @@ function renderInsights(){
     t:Object.entries(bySt).map(([s,l])=>'<b>'+esc(short(s))+'</b>: '+l.length+' row'+(l.length>1?'s':'')+' identical to '+[...new Set(l.map(o=>o.stale.wk))].join('/')+' ('+esc(l.slice(0,3).map(o=>o.key).join(', '))+(l.length>3?', …':'')+')').join('<br>')+
       '<br>Other stores report different figures for the same models this week. Worth checking with the store.'});
   const miss=M.stores.filter(s=>!samRows(wk).some(o=>o.store===s));
-  if(miss.length)I.push({u:'info',ic:'eye',h:'Not reported in '+wk,big:miss.length,t:esc(miss.map(short).join(', '))+'. These stores show grey in the matrix, never red.'});
+  if(miss.length)I.push({u:'info',ic:'eye',h:'Not reported in '+wk,big:miss.length,t:esc(miss.map(short).join(', '))+'. They are hidden from the matrix and the store table.'});
   const order={crit:0,watch:1,info:2};I.sort((a,b)=>order[a.u]-order[b.u]);
   $('insights').innerHTML=I.slice(0,7).map(x=>'<div class="insight '+x.u+'"><div class="symbol">'+svgI(x.ic)+'</div><div style="min-width:0;flex:1"><div class="hd"><b>'+esc(x.h)+'</b><span class="urg '+x.u+'">'+({crit:'Critical',watch:'Watch',info:'Info'})[x.u]+'</span><span class="big">'+x.big+'</span></div><p>'+x.t+'</p></div></div>').join('');
 }
@@ -416,7 +417,8 @@ const STATUSCHIP={ok:'<span class="chip ok">Available</span>',na:'<span class="c
 function renderStoreChips(){
   const wk=$('weekFilter').value,has=s=>M.recs.some(o=>o.wk===wk&&o.store===s);
   $('storeChips').innerHTML='<span class="lbl">Store</span><button class="pill'+(!ST.store?' active':'')+'" data-store="">All stores</button>'+
-    M.stores.map(s=>'<button class="pill'+(ST.store===s?' active':'')+'" data-store="'+esc(s)+'"'+(has(s)?'':' style="opacity:.45" title="Not reported this week"')+'>'+esc(short(s))+'</button>').join('');
+    M.stores.filter(has).map(s=>'<button class="pill'+(ST.store===s?' active':'')+'" data-store="'+esc(s)+'">'+esc(short(s))+'</button>').join('');
+  if(ST.store&&!has(ST.store))ST.store='';
 }
 function renderStoreTable(){
   const wk=$('weekFilter').value,b=$('brandFilter').value,q=$('search').value.trim().toLowerCase(),issues=$('issuesOnly').checked;
