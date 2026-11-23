@@ -1,1 +1,1 @@
-Manual data refresh requested 2026-11-20 18:15 (Teplice duplicate fixed in sheet)
+Manual data refresh requested 2026-11-23 15:34 (enable refresh button)
