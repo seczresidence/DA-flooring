@@ -3,17 +3,114 @@
 <meta name="robots" content="noindex,nofollow">
 <title>DA Flooring · DATART</title>
 <style>
-/* Two screens: (1) KPIs, availability matrix + signals, competitor highlights; (2) store-by-store table. */
+/* Overview (one screen, no scrolling) and Store by store (separate view). Samsung only on the overview. */
 :root{--bg:#0a0d14;--panel:#121b2b;--panel2:#192438;--line:#253249;--line2:#223047;--fg:#e9edf5;--muted:#94a3b8;--muted2:#8fa0b7;--orange:#ff9b49;--orange-d:#f58a35;--ok:#5ce1b2;--ok-bg:#123c34;--bad:#ff8e93;--bad-bg:#4a252b;--warn:#f9c76d;--warn-bg:#453a20;--unk:#9baac0;--unk-bg:#283246;--font:Inter,"Segoe UI",Arial,sans-serif;color-scheme:dark;font-family:var(--font);color:var(--fg);background:var(--bg);font-size:15px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.55}
-.wrap{max-width:1500px;margin:auto;padding-block:36px 90px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5}
+[hidden]{display:none!important}
+.wrap{width:100%;max-width:1500px;margin:0 auto;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+#app{min-height:100vh;display:flex;flex-direction:column}
+body.ov #app{height:100vh}
 .eyebrow{color:var(--muted2);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
-.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
-.topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:26px;align-self:stretch}
+.top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-top:22px;padding-bottom:14px}
+.top h1{font-size:30px;margin:6px 0 2px;letter-spacing:-1px}
+.muted{color:var(--muted)}.orange{color:var(--orange)}
+.updated{font-size:12px;color:var(--muted2);margin-top:4px}
+.topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:14px}
 .logos{display:flex;align-items:center;gap:28px}
 .logos img{height:20px;width:auto;display:block;opacity:.95}
-@media(max-width:700px){.topright{align-items:flex-start}.logos img{height:16px}}
+.navrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.seg{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.seg .lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
+button.pill,a.pill{background:#1b2940;border:1px solid #34455e;border-radius:9px;color:#d5e3f4;padding:7px 13px;cursor:pointer;font:inherit;font-size:13px;text-decoration:none;display:inline-block}
+button.pill:hover,a.pill:hover{border-color:var(--orange)}
+button.pill.active,a.pill.active{background:var(--orange-d);color:#161b24;border-color:var(--orange-d);font-weight:800}
+.tabs a.pill{padding:8px 16px;font-weight:700}
+button.pill.na{opacity:.5}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.panel,.metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;min-width:0}
+/* ---- overview ---- */
+#v-overview{flex:1;min-height:0;display:flex;flex-direction:column;gap:18px;padding-bottom:22px}
+.metrics{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2.4fr);gap:18px}
+.metric{padding:16px 22px}
+.metric .k{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
+.metric b.v{display:flex;align-items:baseline;gap:10px;font-size:32px;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.metric b .tr{font-size:12px;font-weight:700}
+.metric small{color:#9dadc2;display:block;font-size:12.5px}
+.incs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.inc .sku{font-size:12px;font-weight:800;color:#dbe6f3;letter-spacing:.3px}
+.inc .val{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.inc .val.none{color:var(--unk)}
+.up{color:var(--ok)}.dn{color:var(--bad)}.flat{color:var(--unk)}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,1fr);gap:18px}
+.main>.panel{display:flex;flex-direction:column;min-height:0;padding:18px 22px}
+.panel h2{font-size:17px;margin:0 0 4px}
+.sub{font-size:12.5px;color:var(--muted2);margin-bottom:12px}
+.fill{flex:1;min-height:0;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:#8ea0b7;font-size:10.5px;text-align:left;letter-spacing:.5px;text-transform:uppercase;background:var(--panel2);padding:10px;white-space:nowrap;font-weight:700}
+td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+#matrix{height:100%}
+#matrix th{color:#f1f5fb;font-size:12px;font-weight:800;text-transform:none;letter-spacing:.3px;text-align:center;background:#1d2a42}
+#matrix th:first-child{text-align:left}
+#matrix td{padding:4px 6px;text-align:center}
+#matrix td:first-child{text-align:left}
+.storelink{color:#f4f7fb;font-weight:800;font-size:14px;text-decoration:none;white-space:nowrap;border-bottom:1px dashed #4a5d7a}
+.storelink:hover{color:var(--orange);border-color:var(--orange)}
+.natag{font-size:10px;font-weight:800;color:var(--unk);background:var(--unk-bg);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+.cell{display:inline-grid;place-items:center;width:100%;max-width:150px;min-height:30px;border-radius:8px;font-weight:800;border:0;cursor:pointer;font-family:inherit;font-size:14px;text-decoration:none}
+.cell:hover{outline:2px solid var(--orange)}
+.s-ok{background:var(--ok-bg);color:var(--ok)}.s-bad{background:var(--bad-bg);color:var(--bad)}
+.s-warn{background:var(--warn-bg);color:var(--warn)}.s-unk{background:var(--unk-bg);color:var(--unk)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#aab7c9;margin-top:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;background:#25354a;font-size:11.5px;color:#c8d6e7;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.unk{background:var(--unk-bg);color:var(--unk)}
+.cz{color:#ffd1b8}
+.sig h3{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin:4px 0 6px;display:flex;justify-content:space-between}
+.sig h3 .n{color:var(--bad);font-size:13px}
+.item{padding:10px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.item:last-child{border-bottom:0}
+.item .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item .hd a{color:#f4f7fb;font-weight:800;text-decoration:none}.item .hd a:hover{color:var(--orange)}
+.item .sk{color:#c9d6e6;font-weight:650}
+.item .since{margin-left:auto;font-size:11.5px;color:var(--muted2)}
+.item p{margin:4px 0 0;line-height:1.5}
+.item p.none{color:var(--muted2);font-style:italic}
+.sig .block+.block{margin-top:14px}
+.sig .line{font-size:13px;color:#b6c3d6}
+/* ---- store by store ---- */
+#v-stores{padding-bottom:60px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px}
+.tabs .sep{width:1px;background:var(--line);margin:0 6px}
+.shead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.shead h2{font-size:24px;margin:0}
+.prio{display:flex;gap:10px;flex-wrap:wrap}
+.prio .chip{font-size:12px;padding:5px 10px}
+.controls{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
+.controls input,.controls select{background:var(--panel2);color:#eaf0f7;border:1px solid #33425b;border-radius:9px;padding:9px 12px;min-width:170px;font:inherit;font-size:13px}
+.tbl{padding:6px 14px 14px}
+.tbl td.r,.tbl th.r{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr.cat td{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);padding:14px 10px 6px;border-bottom:0}
+.tbl tr.pri td:first-child{border-left:3px solid var(--orange)}
+.note{max-width:380px;line-height:1.5}
+.flag{color:var(--warn);cursor:help;font-weight:800}
+.hl{color:var(--orange);font-weight:700}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.highlights{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+.hcard{padding:16px 20px}
+.hcard .k{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
+.hcard .v{font-size:26px;font-weight:800;color:var(--orange);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.hcard .d{font-size:13px;color:#c3cfdf}
+.tiny{font-size:12px;color:#9dadc2}
+details.method{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 22px}
+details.method summary{cursor:pointer;font-weight:700}
+details.method h3{font-size:13px;margin:18px 0 8px;color:var(--orange)}
+details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
+#tip{position:fixed;z-index:50;max-width:380px;background:#0e1626;border:1px solid #34455e;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;box-shadow:0 8px 30px #000a;pointer-events:none;display:none}
+#tip .vr{padding:6px 0;border-top:1px solid var(--line2)}
+/* ---- lock ---- */
 #lock{min-height:100vh;display:grid;place-items:center;padding:20px}
 .lockbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:36px 40px;width:min(420px,100%);display:flex;flex-direction:column;gap:12px}
 .lockbox .logos{margin-bottom:18px}
@@ -22,153 +119,59 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-
 .lockbox input{background:var(--panel2);color:var(--fg);border:1px solid #33425b;border-radius:9px;padding:12px;font:inherit}
 .lockbox button{padding:11px 14px;margin-top:6px}
 .lockerr{color:var(--bad);font-size:13px;min-height:20px}
-[hidden]{display:none!important}
-.top h1{font-size:32px;margin:10px 0 6px;letter-spacing:-1px}
-.muted{color:var(--muted)}.orange{color:var(--orange)}
-.updated{font-size:12px;color:var(--muted2);margin-top:6px}
-.seg{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.seg .lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
-button.pill{background:#1b2940;border:1px solid #34455e;border-radius:9px;color:#d5e3f4;padding:8px 14px;cursor:pointer;font:inherit;font-size:13px}
-button.pill:hover{border-color:var(--orange)}
-button.pill.active{background:var(--orange-d);color:#161b24;border-color:var(--orange-d);font-weight:800}
-button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin:30px 0}
-.metric,.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px}
-.metric{padding:20px 22px;min-width:0}
-.metric .k{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
-.metric b{display:flex;align-items:baseline;gap:10px;font-size:32px;margin:8px 0 6px;font-variant-numeric:tabular-nums}
-.metric b .tr{font-size:12px;font-weight:700}
-.metric small{color:#9dadc2;display:block;line-height:1.55;font-size:12.5px}
-.up{color:var(--ok)}.dn{color:var(--bad)}.flat{color:var(--unk)}
-.main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr);gap:24px;align-items:start}
-.panel{padding:24px 26px;min-width:0}
-.panel h2{font-size:18px;margin:0 0 6px}
-.sub{font-size:13px;color:var(--muted2);margin-bottom:18px;line-height:1.6}
-.scroll{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{color:#8ea0b7;font-size:10.5px;text-align:left;letter-spacing:.5px;text-transform:uppercase;background:var(--panel2);padding:11px 10px;white-space:nowrap;font-weight:700}
-td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
-#matrix th:not(:first-child),#matrix td:not(:first-child){text-align:center}
-#matrix td{padding:6px 6px}
-#matrix th{letter-spacing:.3px;line-height:1.35;padding:10px 6px;text-transform:none;font-size:11px}
-.store{white-space:nowrap;font-weight:650}
-.cell{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;height:32px;border-radius:8px;font-weight:800;border:0;cursor:pointer;font-family:inherit;font-size:13px;line-height:1.05;padding:0 8px;position:relative}
-.cell small{font-size:9.5px;font-weight:700;opacity:.85}
-.cell .ar{position:absolute;top:-6px;right:-6px;font-size:9px;background:var(--bg);border-radius:50%;width:16px;height:16px;display:grid;place-items:center;border:1px solid var(--line)}
-.cell:hover,.cell.sel{outline:2px solid var(--orange)}
-.s-ok{background:var(--ok-bg);color:var(--ok)}.s-bad{background:var(--bad-bg);color:var(--bad)}
-.s-warn{background:var(--warn-bg);color:var(--warn)}.s-unk{background:var(--unk-bg);color:var(--unk)}
-.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#aab7c9;margin-top:16px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.detailbox{margin-top:16px;padding:14px 16px;background:var(--panel2);border-radius:12px;font-size:13px;line-height:1.65;min-height:56px;color:#c3cfdf}
-.detailbox .vr{padding:8px 0;border-top:1px solid var(--line2)}.detailbox .vr:first-of-type{border-top:0}
-.chip{display:inline-block;padding:3px 8px;border-radius:6px;background:#25354a;font-size:11.5px;color:#c8d6e7;white-space:nowrap}
-.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}
-.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.unk{background:var(--unk-bg);color:var(--unk)}
-.cz{color:#ffd1b8;font-style:italic}
-.insight{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line2)}
-.insight:first-child{padding-top:4px}.insight:last-child{border:0;padding-bottom:0}
-.symbol{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#273448;flex-shrink:0;color:var(--orange)}
-.symbol svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.insight.crit .symbol{background:var(--bad-bg);color:var(--bad)}
-.insight .hd{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.insight b{font-size:14px}
-.insight p{font-size:13px;color:#a9b7ca;line-height:1.65;margin:6px 0 0}
-.insight .big{margin-left:auto;font-size:20px;font-weight:800;color:var(--orange);font-variant-numeric:tabular-nums;white-space:nowrap}
-.insight.crit .big{color:var(--bad)}
-.urg{font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:5px}
-.urg.crit{background:var(--bad-bg);color:var(--bad)}.urg.watch{background:var(--warn-bg);color:var(--warn)}.urg.info{background:var(--unk-bg);color:var(--unk)}
-.comp{margin-top:24px}
-.comp td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tiny{font-size:12px;color:#9dadc2;line-height:1.6}
-.hl{color:var(--orange);font-weight:700}
-.section{margin-top:72px}.section h2.big{font-size:26px;margin:8px 0 8px}
-.controls{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 22px;align-items:center}
-.controls input,.controls select{background:var(--panel2);color:#eaf0f7;border:1px solid #33425b;border-radius:9px;padding:10px 12px;min-width:170px;font:inherit;font-size:13px}
-.controls input[type=checkbox]{min-width:0;width:16px;height:16px;padding:0;accent-color:var(--orange)}
-.controls label{font-size:13px;color:#c3cfdf;display:flex;gap:7px;align-items:center;cursor:pointer}
-#storeChips{margin:6px 0 4px}
-.storetbl td.r,.storetbl th.r{text-align:right;font-variant-numeric:tabular-nums}
-.storetbl tr.grp td{background:#16223a;border-bottom:1px solid var(--line);padding:16px 10px 12px}
-.storetbl tr.grp:not(:first-child) td{border-top:18px solid var(--panel)}
-.storetbl tr.grp .gname{font-size:16px;font-weight:800}
-.storetbl tr.grp .gmeta{font-size:12px;color:var(--muted2);margin-left:10px}
-.storetbl tr.cat td{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);padding:12px 10px 6px;border-bottom:0}
-.storetbl tr.sam td:first-child{border-left:3px solid var(--orange)}
-.note{max-width:360px;line-height:1.5}
-.flag{color:var(--warn);cursor:help;font-weight:800}
-details.method{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 24px}
-details.method summary{cursor:pointer;font-weight:700}
-details.method h3{font-size:13px;margin:20px 0 8px;color:var(--orange)}
-details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
-#tip{position:fixed;z-index:50;max-width:360px;background:#0e1626;border:1px solid #34455e;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;box-shadow:0 8px 30px #000a;pointer-events:none;display:none}
-@media(max-width:1150px){.main{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.metrics{grid-template-columns:1fr}#matrix th,#matrix td{padding-inline:3px}#matrix th{font-size:8px;letter-spacing:0}#matrix .cell{min-width:36px;padding:0 3px}.wrap{padding-block:20px 60px}.topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:26px;align-self:stretch}
-.logos{display:flex;align-items:center;gap:28px}
-.logos img{height:20px;width:auto;display:block;opacity:.95}
-@media(max-width:700px){.topright{align-items:flex-start}.logos img{height:16px}}
-.top h1{font-size:25px}.panel{padding:16px}}
+@media(max-height:860px){.top{padding-top:14px;padding-bottom:10px}.top h1{font-size:26px}.metric{padding:12px 20px}.metric b.v{font-size:26px;margin:2px 0}.inc .val{font-size:22px}.incs{margin-top:4px}#v-overview{gap:14px;padding-bottom:14px}.main>.panel{padding:14px 20px}.cell{min-height:26px}#matrix td{padding:3px 6px}#matrix th{padding:8px}.legend{margin-top:8px}.sub{margin-bottom:8px}}
+@media(max-width:1100px),(max-height:640px){body.ov #app{height:auto}.main{grid-template-columns:1fr}.fill{overflow:visible}#matrix{height:auto}}
+@media(max-width:800px){.metrics{grid-template-columns:1fr}.incs{grid-template-columns:repeat(2,1fr)}.highlights{grid-template-columns:1fr}.topright{align-items:flex-start}.navrow{justify-content:flex-start}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <div id="lock" hidden><form class="lockbox" id="lockForm" autocomplete="off">
 <div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
 <h1>DA Flooring</h1><p class="muted">This report is password protected.</p>
 <label for="pw" class="lbl">Password</label>
-<input id="pw" type="password" autocomplete="current-password" required autofocus>
+<input id="pw" type="password" autocomplete="current-password" required>
 <button class="pill active" type="submit" id="pwBtn">Open report</button>
 <div class="lockerr" id="pwErr" role="alert"></div></form></div>
-<main class="wrap" id="app">
-<header class="top"><div><div class="eyebrow">Cheil · Retail intelligence / DATART</div>
+
+<div id="app">
+<header class="top wrap"><div><div class="eyebrow">Cheil · Retail intelligence / DATART</div>
 <h1>DA Flooring <span class="orange" id="wkTitle"></span></h1>
-<div class="muted">Samsung availability &amp; competitive intelligence</div>
+<div class="muted">Samsung priority SKU availability in 8 DATART stores</div>
 <div class="updated" id="updated"></div></div>
 <div class="topright"><div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
-<div class="seg" id="wkSeg" role="group" aria-label="Reporting week"></div></div></header>
+<div class="navrow"><div class="seg" id="wkSeg" role="group" aria-label="Week"></div>
+<div class="seg" role="tablist" aria-label="View"><a class="pill" id="navOv" href="#overview">Overview</a><a class="pill" id="navSt" href="#store">Store by store</a></div></div></div></header>
 
+<section id="v-overview" class="wrap" aria-label="Overview">
 <div class="metrics" id="metrics"></div>
-
 <div class="main">
 <section class="panel"><h2>Priority model availability</h2>
 <div class="sub" id="matrixSub"></div>
-<div class="scroll"><table id="matrix"></table></div>
-<div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Unavailable / not present</span><span><i class="dot s-warn"></i>Partial or stock only</span><span><i class="dot s-unk"></i>Not reported</span><span>▲▼ change vs previous week</span></div>
-<div class="detailbox" id="cellDetail">Click a cell for the exact SKU, status, store comment and the change since the previous week.</div>
-
-<div class="comp"><h2>Competitor highlights <span class="orange" id="compWk"></span></h2>
-<div class="sub" id="compSub"></div>
-<div class="scroll"><table id="compTbl"></table></div></div>
+<div class="fill"><table id="matrix"></table></div>
+<div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Unavailable / not present</span><span><i class="dot s-warn"></i>Stock only</span><span><i class="dot s-unk"></i>Not reported (n/a)</span><span>Click a store for its detail</span></div>
 </section>
+<aside class="panel sig"><h2>What matters this week</h2>
+<div class="sub">Why priority SKUs are missing, in the stores’ own words</div>
+<div class="fill" id="insights"></div></aside>
+</div></section>
 
-<aside class="panel"><h2>What matters this week</h2>
-<div class="sub">Signals ordered by urgency, each backed by the reported rows</div>
-<div id="insights"></div></aside>
+<section id="v-stores" class="wrap" aria-label="Store by store" hidden>
+<div class="tabs" id="storeTabs" role="tablist"></div>
+<div id="storeView"></div>
+<details class="method"><summary>Data notes, rules and checks</summary><div id="methodBody"></div></details>
+</section>
 </div>
-
-<section class="section" id="screen2"><div class="eyebrow">Screen 02 · Store by store</div>
-<h2 class="big">Store by store</h2>
-<div class="sub">Every cleaned row of the selected week, grouped by store. Samsung rows are marked with an orange edge; store comments are shown as written.</div>
-<div class="seg" id="storeChips" role="group" aria-label="Store"></div>
-<div class="controls">
-<select id="weekFilter" aria-label="Week"></select>
-<select id="brandFilter" aria-label="Brand"><option value="">All brands</option><option value="Samsung">Samsung only</option><option value="comp">Competitors only</option></select>
-<input id="search" placeholder="Search SKU, brand or comment" aria-label="Search">
-<label><input type="checkbox" id="issuesOnly"> Only issues and comments</label>
-</div>
-<div class="panel scroll" style="padding:8px 14px 14px"><table class="storetbl" id="storeTbl"></table><div class="tiny" id="count" style="margin-top:10px"></div></div>
-<details class="method" id="method"><summary>Data notes, rules and checks</summary><div id="methodBody"></div></details>
-</section></main>
 <div id="tip" role="tooltip"></div>
 <script type="application/json" id="raw-data">__DATA__</script>
 <script>
 /* ===== CONFIG ===== */
 const CONFIG={
+  /* the 8 report stores, matched by GSCM, in display order */
+  stores:{C000045478:'Datart Brno Avion',C000045479:'Datart Brno Olympia',C000045469:'Datart Liberec Nisa',C000045480:'Datart Olomouc Kafkova',
+    C000057880:'Datart Ostrava Avion',C000045473:'Datart Praha Zličín',C000057886:'Datart Teplice',C000045475:'Datart Čestlice'},
+  firstWeek:'W44',
   /* priority SKUs = matrix columns, in this order. 'also' = other spellings of the same model */
   prioritySkus:[{sku:'RB38C776ASREF'},{sku:'RB34C603CB1EF',also:['RB34C603CB1']},{sku:'WW90DG6U25LBU4'},{sku:'DV90DG6845LBU4'}],
   skuAliases:{WW90DGU85LKU4:'WW90DG6U85LKU4'},   /* obvious typos in the sheet */
-  stores:{
-    C000045478:'Datart Brno Avion',C000045479:'Datart Brno Olympia',C000045472:'Datart Liberec Forum',
-    C000045476:'Datart Liberec Géčko',C000045469:'Datart Liberec Nisa',C000045480:'Datart Olomouc Kafkova',
-    C000057880:'Datart Ostrava Avion',C000045473:'Datart Praha Zlicin',C000057886:'Datart Teplice',C000045475:'Datart Čestlice'},
   prefix:{Samsung:'SAM',LG:'LGG',Bosch:'BOS',Haier:'HAR',AEG:'AEG'},
   incentiveDivisor:10,   /* the sheet's incentive value / 10 = reward in CZK */
   outlierRatio:2,maxDiscount:60,highDiscountNote:35
@@ -178,11 +181,11 @@ const fmtInt=n=>n==null?'—':Math.round(n).toString().replace(/\B(?=(\d{3})+(?!
 const fmtNum=n=>n==null?'—':Number.isInteger(Math.round(n*10)/10)?fmtInt(n):(n<0?'−':'')+fmtInt(Math.floor(Math.abs(n)))+','+Math.round(Math.abs(n)*10)%10;
 const fmtKc=n=>n==null?'—':fmtNum(n)+NB+'Kč';
 const fmtPct=(n,d=1)=>n==null?'—':n.toFixed(d).replace('.',',')+NB+'%';
-const fmtX=n=>n.toFixed(1).replace('.',',')+'×';
 const short=s=>s.replace(/^Datart /,'');
+const slug=s=>short(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const catName=c=>c==='REF'?'refrigerator':'laundry';
-
+const $=id=>document.getElementById(id);
 /* ===== DATA MODEL ===== */
 function parseNum(s){s=(s||'').trim();if(s===''||/^x$/i.test(s)||/^n\/a$/i.test(s))return null;
   s=s.replace(/[\s ]/g,'');if(/^\d+(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'');
@@ -200,17 +203,20 @@ function classify(o){
 const median=a=>{a=a.filter(v=>v!=null).sort((x,y)=>x-y);if(!a.length)return null;const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2};
 
 function buildModel(D){
-  const rows=D.rows,log={skipped:0,dupExact:0,dupMerged:0,dupConflict:[],aliases:{},bulkBlank:[],stale:[],newStores:[]};
+  const rows=D.rows,log={skipped:0,dupExact:0,dupMerged:0,dupConflict:[],aliases:{},bulkBlank:[],stale:[],newStores:[],outStores:{},oldWeeks:0};
   /* week order: by week number; when the weeks span the turn of the year (e.g. W51 and W02), low numbers count as the next year */
   const order=[...new Set(rows.map(r=>(r[0]||'').trim().toUpperCase()).filter(w=>/^W\d+$/.test(w)))];
   const wnum=w=>parseInt(w.slice(1),10),span=order.length?Math.max(...order.map(wnum))-Math.min(...order.map(wnum)):0;
   const wsort=w=>wnum(w)+(span>26&&wnum(w)<27?53:0);order.sort((a,b)=>wsort(a)-wsort(b));
+  const first=CONFIG.firstWeek?order.findIndex(w=>wsort(w)>=wsort(CONFIG.firstWeek)):0;
+  const keepWeeks=new Set(order.slice(Math.max(first,0)));
   const stores={...CONFIG.stores};let recs=[];
   for(const p of rows){
     const wk=(p[0]||'').trim().toUpperCase(),gscm=(p[10]||'').trim(),ref=(p[2]||'').trim(),wm=(p[3]||'').trim();
     if(!/^W\d+$/.test(wk)||!(p[4]||'').trim()||!(ref||wm)){log.skipped++;continue}
     const storeRaw=(p[1]||'').trim();
-    if(gscm&&!stores[gscm]){stores[gscm]=storeRaw;log.newStores.push(storeRaw+' ('+gscm+')')}
+    if(!keepWeeks.has(wk)){log.oldWeeks++;continue}
+    if(!stores[gscm]){log.outStores[storeRaw+(gscm?' ('+gscm+')':'')]=(log.outStores[storeRaw+(gscm?' ('+gscm+')':'')]||0)+1;continue}
     const store=stores[gscm]||storeRaw;
     if(store!==storeRaw)(log.aliases[store]=log.aliases[store]||new Set()).add(storeRaw);
     const brand=normBrand(ref||wm),o={wk,wn:order.indexOf(wk),gscm,store,brand,cat:ref?'REF':'WM',sku:(p[4]||'').trim(),
@@ -218,9 +224,10 @@ function buildModel(D){
     o.key=normKey(o.sku,brand);
     if(CONFIG.skuAliases[o.key]){o.flags.push('SKU typo in the sheet (“'+o.key+'”), read as '+CONFIG.skuAliases[o.key]);o.key=CONFIG.skuAliases[o.key]}
     o.pt=brand==='Samsung'?(CONFIG.prioritySkus.find(p=>p.sku===o.key||(p.also||[]).includes(o.key))||{}).sku||null:null;
+    if(o.typ&&!/^(b|mb|b\/mb|mb\/b|n\/a|stock|x)$/i.test(o.typ)&&o.typ.length>3){if(!o.note)o.note=o.typ;o.flags.push('Comment was typed in the placement column; read as a comment');o.typ=''}
     const txt=[p[6],p[7],p[8]].map(v=>(v||'').trim()).find(v=>v&&!/^(x|n\/a)$/i.test(v)&&parseNum(v)==null);
     if(txt){if(!o.note)o.note=txt;o.flags.push('Comment was typed in a price column; read as a comment')}
-    if(!o.typ)o.flags.push('Placement (B / MB) left empty');
+    if(!o.typ&&!o.note)o.flags.push('Placement (B / MB) left empty');
     if(!o.pt&&brand==='Samsung'){const nf=CONFIG.prioritySkus.map(p=>p.sku).find(f=>[...f].some((_,i)=>o.key.startsWith(f.slice(0,i)+f.slice(i+1))));
       if(nf){o.nearPt=nf;o.flags.push('Possible typo of priority SKU '+nf+'; not matched automatically')}}
     o.status=classify(o);
@@ -275,252 +282,213 @@ function buildModel(D){
     s.rows.forEach(o=>{if(o.status==='blank')o.flags.push('Whole store blank this week: possible reporting gap')})}
   const weeks=order.filter(w=>recs.some(o=>o.wk===w));
   return{recs,weeks,samWeeks:weeks.filter(w=>recs.some(o=>o.wk===w&&o.brand==='Samsung')),compWeeks:weeks.filter(w=>recs.some(o=>o.wk===w&&o.brand!=='Samsung')),
-    stores:[...new Set(Object.values(stores))],storeId:stores,log,rawCount:rows.length,updated:D.updated};
+    stores:Object.values(CONFIG.stores),storeId:CONFIG.stores,log,rawCount:rows.length,updated:D.updated};
 }
 
 /* ===== ANALYTICS ===== */
-const STATE={ok:{cls:'s-ok',label:'Available',score:2,icon:'✓'},bad:{cls:'s-bad',label:'Unavailable',score:0,icon:'✕'},
-  warn:{cls:'s-warn',label:'Partial or stock only',score:1,icon:'!'},unk:{cls:'s-unk',label:'Not reported',score:null,icon:'–'}};
-const ROWSTAT={ok:'Available',na:'Unavailable (N/A)',blank:'Not present (blank or x)',stock:'Stock only, not on display'};
-let M,ST;
-const prevWeek=wk=>{const i=M.samWeeks.indexOf(wk);return i>0?M.samWeeks[i-1]:null};
-const compWeekFor=wk=>{const i=M.weeks.indexOf(wk);return M.compWeeks.filter(w=>M.weeks.indexOf(w)<=i).pop()||null};
+const STATE={ok:{cls:'s-ok',label:'Available',icon:'✓'},bad:{cls:'s-bad',label:'Unavailable',icon:'✕'},
+  warn:{cls:'s-warn',label:'Stock only',icon:'!'},unk:{cls:'s-unk',label:'Not reported (n/a)',icon:'–'}};
+const ROWSTAT={ok:'Available',na:'Unavailable (N/A)',blank:'Not present',stock:'Stock only, not on display'};
+const STATUSCHIP={ok:'<span class="chip ok">Available</span>',na:'<span class="chip bad">N/A</span>',blank:'<span class="chip bad">Not present</span>',stock:'<span class="chip warn">Stock only</span>'};
+const SKUS=()=>CONFIG.prioritySkus.map(p=>p.sku);
+let M,ST={wk:null,view:'overview',store:null};
+const prevWeek=wk=>{const i=M.weeks.indexOf(wk);return i>0?M.weeks[i-1]:null};
 const samRows=wk=>M.recs.filter(o=>o.wk===wk&&o.brand==='Samsung');
-const ptRows=(wk,store,pt)=>M.recs.filter(o=>o.wk===wk&&o.store===store&&o.pt===pt&&o.brand==='Samsung');
+const reported=(wk,s)=>M.recs.some(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung');
+const ptRows=(wk,store,sku)=>M.recs.filter(o=>o.wk===wk&&o.store===store&&o.pt===sku);
 function cellState(rows){
-  const n=rows.length;if(!n)return{s:'unk',n:0,nOk:0,rows};
-  const nOk=rows.filter(r=>r.status==='ok').length,nStock=rows.filter(r=>r.status==='stock').length,nAbs=n-nOk-nStock;
-  const s=nOk>0&&nAbs===0&&nStock===0?'ok':(nOk>0||nStock>0)?'warn':'bad';
-  return{s,n,nOk,rows};
+  if(!rows.length)return{s:'unk',rows};
+  if(rows.some(r=>r.status==='ok'))return{s:rows.every(r=>r.status==='ok')?'ok':'warn',rows,avail:true};
+  return{s:rows.some(r=>r.status==='stock')?'warn':'bad',rows};
 }
-const reportedStores=wk=>M.stores.filter(s=>M.recs.some(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung'));
-function matrixCells(wk){const out={};for(const st of reportedStores(wk))for(const f of CONFIG.prioritySkus.map(p=>p.sku))out[st+'|'+f]=cellState(ptRows(wk,st,f));return out}
-function availKPI(wk){
-  const cur=matrixCells(wk),rep=Object.entries(cur).filter(([,c])=>c.s!=='unk');
-  const present=rep.filter(([,c])=>c.nOk>0).length,full=rep.filter(([,c])=>c.s==='ok').length;
-  const res={reported:rep.length,total:Object.keys(cur).length,present,full,pct:rep.length?present/rep.length*100:null,trend:null};
-  const pw=prevWeek(wk);
-  if(pw){const prev=matrixCells(pw),common=rep.filter(([k])=>prev[k]&&prev[k].s!=='unk');
-    if(common.length)res.trend={pp:common.filter(([,c])=>c.nOk>0).length/common.length*100-common.filter(([k])=>prev[k].nOk>0).length/common.length*100,n:common.length,pw}}
-  return res;
+/* availability on a fixed base: 8 stores × 4 priority SKUs; not reported counts as not available */
+function avail(wk){
+  let n=0,ok=0,unrep=0;
+  for(const s of M.stores)for(const k of SKUS()){n++;const c=cellState(ptRows(wk,s,k));if(c.avail)ok++;if(c.s==='unk')unrep++}
+  return{n,ok,unrep,pct:ok/n*100};
 }
-function gapKPI(wk){
-  const rows=samRows(wk).filter(o=>o.pt),na=rows.filter(o=>o.status==='na'),bl=rows.filter(o=>o.status==='blank'),st=rows.filter(o=>o.status==='stock');
-  const res={na,bl,st,total:na.length+bl.length,trend:null},pw=prevWeek(wk);
-  if(pw){const cur=matrixCells(wk),prev=matrixCells(pw),keys=Object.keys(cur).filter(k=>cur[k].s!=='unk'&&prev[k]&&prev[k].s!=='unk');
-    const g=c=>c.rows.filter(r=>r.status==='na'||r.status==='blank').length;
-    if(keys.length)res.trend={d:keys.reduce((a,k)=>a+g(cur[k])-g(prev[k]),0),pw}}
-  return res;
-}
-function compareWeeks(a,b){
-  const idx=w=>{const m=new Map();for(const o of samRows(w))m.set(o.store+'|'+o.key,o);return m};
-  const A=idx(a),B=idx(b),isAbs=o=>o.status==='na'||o.status==='blank',bulk=o=>o.flags.some(f=>/Whole store blank/.test(f));
-  const out={newGaps:[],resolved:[],recurring:[],pairs:0,incomplete:0};
-  for(const [k,y] of B){const x=A.get(k);if(!x)continue;out.pairs++;
-    if(bulk(x)||bulk(y)){out.incomplete++;continue}
-    if(!y.pt)continue;
-    if(x.status==='ok'&&isAbs(y))out.newGaps.push(y);else if(isAbs(x)&&y.status==='ok')out.resolved.push(y);else if(isAbs(x)&&isAbs(y))out.recurring.push(y)}
-  return out;
+/* one incentive per SKU: the value most stores report (never an average); a tie goes to the value nearest the median */
+function incentive(wk,sku){
+  const rows=M.recs.filter(o=>o.wk===wk&&o.pt===sku&&o.status==='ok'&&o.inc!=null);
+  if(!rows.length)return null;
+  const cnt=new Map();rows.forEach(o=>cnt.set(o.inc,(cnt.get(o.inc)||[]).concat(short(o.store))));
+  const med=median(rows.map(o=>o.inc)),best=[...cnt.entries()].sort((a,b)=>b[1].length-a[1].length||Math.abs(a[0]-med)-Math.abs(b[0]-med))[0];
+  return{v:best[0],n:best[1].length,total:rows.length,others:[...cnt.entries()].filter(e=>e[0]!==best[0])};
 }
 function absentStreak(o){
-  const rows=M.recs.filter(r=>r.store===o.store&&r.key===o.key&&r.brand==='Samsung'&&r.wn<=o.wn).sort((p,q)=>q.wn-p.wn);
-  let n=0;for(const r of rows){if(r.status==='na'||r.status==='blank')n++;else break}
-  return{n,of:rows.length,since:rows[n-1]?rows[n-1].wk:o.wk};
-}
-const compStores=wk=>[...new Set(M.recs.filter(o=>o.wk===wk&&o.brand!=='Samsung').map(o=>o.store))];
-const compRows=wk=>M.recs.filter(o=>o.wk===wk&&o.brand!=='Samsung'&&o.status==='ok'&&!o.stale);
-function rankGroup(rows,valFn){
-  const m=new Map();
-  for(const o of rows){const v=valFn(o);if(v==null)continue;const k=o.brand+'|'+o.key+'|'+v.toFixed(2);
-    const g=m.get(k)||m.set(k,{o,v,stores:[]}).get(k);g.stores.push(short(o.store))}
-  return[...m.values()].sort((p,q)=>q.v-p.v);
-}
-function pressure(cw){
-  const rows=compRows(cw);if(!rows.length)return null;
-  const top=rankGroup(rows,o=>o.inc)[0];if(!top)return null;const cs=compStores(cw);
-  const sam=M.recs.filter(o=>o.wk===cw&&o.brand==='Samsung'&&o.cat===top.o.cat&&o.inc!=null&&o.status==='ok'&&!o.stale&&cs.includes(o.store)).sort((a,b)=>b.inc-a.inc)[0];
-  return{top,sam,mult:sam&&sam.inc>0?top.v/sam.inc:null};
+  const rows=M.recs.filter(r=>r.store===o.store&&r.pt===o.pt&&r.wn<=o.wn).sort((p,q)=>q.wn-p.wn);
+  let n=0;for(const r of rows){if(r.status!=='ok')n++;else break}
+  return{n,since:rows[n-1]?rows[n-1].wk:o.wk};
 }
 
-/* ===== SCREEN 1 ===== */
-const $=id=>document.getElementById(id);
-const ICON={alert:'<path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v5M12 18v.5"/>',chat:'<path d="M4 5h16v11H9l-5 4V5z"/>',
-  swap:'<path d="M4 8h14l-4-4M20 16H6l4 4"/>',tag:'<path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1"/>',
-  trend:'<path d="M3 17l6-6 4 4 8-9M15 6h6v6"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'};
-const svgI=n=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+ICON[n]+'</svg>';
-
+/* ===== HEADER / ROUTING ===== */
 function renderHeader(){
   $('wkTitle').textContent=ST.wk;
-  const latest=M.samWeeks[M.samWeeks.length-1];
-  $('wkSeg').innerHTML='<span class="lbl">Week</span>'+M.samWeeks.slice().reverse().map(w=>'<button class="pill'+(w===ST.wk?' active':'')+'" data-wk="'+w+'">'+w+(w===latest?' · latest':'')+'</button>').join('');
-  $('updated').textContent=M.updated?'Data refreshed '+M.updated+' from the Flooring sheet':'';
+  const latest=M.weeks[M.weeks.length-1];
+  $('wkSeg').innerHTML='<span class="lbl">Week</span>'+M.weeks.slice().reverse().map(w=>'<button class="pill'+(w===ST.wk?' active':'')+'" data-wk="'+w+'">'+w+(w===latest?' · latest':'')+'</button>').join('');
+  $('updated').textContent=M.updated?'Data refreshed '+M.updated:'';
+  $('navOv').classList.toggle('active',ST.view==='overview');$('navSt').classList.toggle('active',ST.view!=='overview');
+  $('navSt').href='#store/'+(ST.store?slug(ST.store):slug(M.stores[0]));
 }
+function route(){
+  const h=decodeURIComponent(location.hash.slice(1));
+  if(h==='competitors'){ST.view='comp'}
+  else if(h.startsWith('store')){ST.view='store';const sl=h.split('/')[1];ST.store=M.stores.find(s=>slug(s)===sl)||ST.store||M.stores[0]}
+  else ST.view='overview';
+  document.body.classList.toggle('ov',ST.view==='overview');
+  $('v-overview').hidden=ST.view!=='overview';$('v-stores').hidden=ST.view==='overview';
+  render();if(ST.view!=='overview')window.scrollTo(0,0);
+}
+function render(){renderHeader();if(ST.view==='overview'){renderKPIs();renderMatrix();renderInsights()}else{renderTabs();ST.view==='comp'?renderComp():renderStore()}}
+
+/* ===== OVERVIEW ===== */
 function renderKPIs(){
-  const wk=ST.wk,a=availKPI(wk),g=gapKPI(wk),cw=compWeekFor(wk),p=cw?pressure(cw):null;
-  const sr=samRows(wk).filter(o=>o.inc!=null&&o.status!=='na'&&!o.stale),pri=sr.filter(o=>o.pt).sort((x,y)=>y.inc-x.inc)[0],all=sr.sort((x,y)=>y.inc-x.inc)[0];
-  const tr=(x,u,good)=>x==null?'':'<span class="tr '+((good?x>0:x<0)?'up':x===0?'flat':'dn')+'">'+(x>0?'▲':x<0?'▼':'●')+' '+fmtInt(Math.abs(x))+u+'</span>';
-  const c=[];
-  c.push('<div class="metric"><span class="k">Product availability</span><b>'+(a.pct==null?'—':fmtPct(a.pct,0))+(a.trend?tr(a.trend.pp,' pp',true):'')+'</b><small>'+
-    (a.reported?a.present+' of '+a.reported+' reported store × SKU cells available. '+(a.total-a.reported?(a.total-a.reported)+' not reported.':''):'No Samsung rows this week.')+(a.trend?' Trend vs '+a.trend.pw+'.':'')+'</small></div>');
-  c.push('<div class="metric"><span class="k">Availability gaps</span><b>'+g.total+(g.trend?tr(g.trend.d,'',false):'')+'</b><small>Priority models: '+g.na.length+' N/A, '+g.bl.length+' blank or x'+(g.st.length?', '+g.st.length+' stock only':'')+'.</small></div>');
-  c.push('<div class="metric"><span class="k">Highest Samsung incentive</span><b>'+(pri?fmtKc(pri.inc):'—')+'</b><small>'+(pri?'Priority models: '+esc(pri.key)+', '+esc(short(pri.store))+'.':'No priority incentive reported.')+(all&&pri&&all.inc>pri.inc?' All Samsung: '+fmtKc(all.inc)+' ('+esc(all.key)+').':'')+'</small></div>');
-  c.push('<div class="metric"><span class="k">Competitor pressure'+(cw?' · '+cw:'')+'</span><b>'+(p?fmtKc(p.top.v):'—')+(p&&p.mult?'<span class="tr dn">'+fmtX(p.mult)+' Samsung</span>':'')+'</b><small>'+
-    (p?esc(p.top.o.brand)+' '+esc(p.top.o.key)+' ('+esc(p.top.stores.join(', '))+')'+(p.sam?' vs Samsung’s top '+catName(p.top.o.cat)+' incentive '+fmtKc(p.sam.inc)+' in the same stores.':'.'):'No competitor data for this week.')+'</small></div>');
-  $('metrics').innerHTML=c.join('');
+  const wk=ST.wk,a=avail(wk),pw=prevWeek(wk),p=pw?avail(pw):null,d=p?a.pct-p.pct:null;
+  const tr=d==null?'':'<span class="tr '+(d>0.05?'up':d<-0.05?'dn':'flat')+'">'+(d>0.05?'▲':d<-0.05?'▼':'●')+' '+fmtNum(Math.abs(Math.round(d*10)/10))+' pp vs '+pw+'</span>';
+  const inc=SKUS().map(k=>{const r=incentive(wk,k);
+    const tip=r&&r.others.length?' title="'+esc(r.n+' of '+r.total+' stores report this value. Different: '+r.others.map(e=>fmtNum(e[0])+' Kč ('+e[1].join(', ')+')').join('; '))+'"':'';
+    return'<div class="inc"'+tip+'><div class="sku">'+k+'</div><div class="val'+(r?'':' none')+'">'+(r?fmtKc(r.v):'—')+'</div></div>'}).join('');
+  $('metrics').innerHTML=
+   '<div class="metric"><span class="k">Product availability</span><b class="v">'+fmtPct(a.pct,0)+tr+'</b><small>'+a.ok+' of '+a.n+' (8 stores × 4 priority SKUs) available'+(a.unrep?'; '+a.unrep+' not reported':'')+'.</small></div>'+
+   '<div class="metric"><span class="k">Samsung incentive per priority SKU</span><div class="incs">'+inc+'</div></div>';
 }
-function cellDetail(store,pt){
-  const wk=ST.wk,pw=prevWeek(wk),c=cellState(ptRows(wk,store,pt));
-  let h='<b>'+esc(short(store))+' · '+pt+'</b> · '+wk+' · <span class="chip '+c.s+'">'+STATE[c.s].label+'</span>';
-  if(!c.n){const last=M.recs.filter(o=>o.store===store&&o.pt===pt&&o.brand==='Samsung'&&o.wn<M.weeks.indexOf(wk)).sort((a,b)=>b.wn-a.wn)[0];
-    h+='<div class="vr">No row for this store and SKU in '+wk+'. Missing reporting, not a confirmed gap.</div>';
-    if(last)h+='<div class="vr">Last report '+last.wk+': '+STATE[cellState(ptRows(last.wk,store,pt)).s].label+'.</div>';return h}
-  for(const r of c.rows){
-    const p=pw?M.recs.find(o=>o.wk===pw&&o.store===store&&o.key===r.key&&o.brand==='Samsung'):null;
-    let chg='';
-    if(p){if(p.status==='ok'&&r.status!=='ok')chg='<span class="dn">New gap since '+pw+'.</span> ';else if(p.status!=='ok'&&p.status!=='stock'&&r.status==='ok')chg='<span class="up">Back since '+pw+'.</span> ';
-      if(p.inc!=null&&r.inc!=null&&p.inc!==r.inc)chg+='Incentive '+fmtNum(p.inc)+' → '+fmtKc(r.inc)+'. ';}
-    h+='<div class="vr"><b>'+esc(r.sku)+'</b> ['+esc(r.typ||'—')+'] · '+ROWSTAT[r.status]+
-      (r.status==='ok'?' · '+fmtKc(r.orig)+(r.act?' → '+fmtKc(r.act):'')+(r.inc!=null?' · incentive '+fmtKc(r.inc):''):'')+
-      (r.note?'<br><span class="cz">„'+esc(r.note)+'“</span>':'')+
-      '<br><span class="tiny">'+(pw?(p?pw+': '+ROWSTAT[p.status]:'Not reported in '+pw):'No earlier week')+'</span>'+(chg?'<br>'+chg:'')+
-      (r.flags.length?'<br><span class="flag">⚑</span> <span class="tiny">'+esc(r.flags.join(' · '))+'</span>':'')+'</div>';}
+function cellTip(store,sku){
+  const wk=ST.wk,c=cellState(ptRows(wk,store,sku));
+  let h='<b>'+esc(short(store))+' · '+sku+'</b> · '+wk+' · <span class="chip '+({'s-ok':'ok','s-bad':'bad','s-warn':'warn','s-unk':'unk'})[STATE[c.s].cls]+'">'+STATE[c.s].label+'</span>';
+  if(!c.rows.length)return h+'<div class="vr">No row for this store and SKU in '+wk+'.</div>';
+  for(const r of c.rows)h+='<div class="vr">'+esc(r.sku)+' ['+esc(r.typ||'—')+'] · '+ROWSTAT[r.status]+(r.status==='ok'?' · '+fmtKc(r.act||r.orig)+(r.inc!=null?' · incentive '+fmtKc(r.inc):''):'')+(r.note?'<br><span class="cz">„'+esc(r.note)+'“</span>':'')+'</div>';
   return h;
 }
 function renderMatrix(){
-  const wk=ST.wk,pw=prevWeek(wk),cur=matrixCells(wk),prev=pw?matrixCells(pw):null;
-  let h='<thead><tr><th>Store</th>'+CONFIG.prioritySkus.map(p=>'<th title="'+p.sku+(p.also?' / '+p.also.join(' / '):'')+'">'+p.sku+'</th>').join('')+'</tr></thead><tbody>';
-  for(const s of reportedStores(wk)){h+='<tr><td class="store">'+esc(short(s))+'</td>';
-    for(const f of CONFIG.prioritySkus.map(p=>p.sku)){const c=cur[s+'|'+f],S=STATE[c.s];let ar='';
-      if(prev&&prev[s+'|'+f]){const q=prev[s+'|'+f];if(c.s!=='unk'&&q.s!=='unk'&&S.score!==STATE[q.s].score)ar='<span class="ar '+(S.score>STATE[q.s].score?'up':'dn')+'">'+(S.score>STATE[q.s].score?'▲':'▼')+'</span>'}
-      h+='<td><button class="cell '+S.cls+'" data-s="'+esc(s)+'" data-f="'+f+'" aria-label="'+esc(short(s)+' '+f+': '+S.label)+'">'+S.icon+(c.n>1?'<small>'+c.nOk+'/'+c.n+'</small>':'')+ar+'</button></td>'}
+  const wk=ST.wk;
+  let h='<thead><tr><th>Store</th>'+SKUS().map(k=>'<th>'+k+'</th>').join('')+'</tr></thead><tbody>';
+  for(const s of M.stores){const rep=reported(wk,s),href='#store/'+slug(s);
+    h+='<tr><td><a class="storelink" href="'+href+'">'+esc(short(s))+'</a>'+(rep?'':'<span class="natag">n/a</span>')+'</td>';
+    for(const k of SKUS()){const c=cellState(ptRows(wk,s,k)),S=STATE[c.s];
+      h+='<td><a class="cell '+S.cls+'" href="'+href+'" data-s="'+esc(s)+'" data-k="'+k+'" aria-label="'+esc(short(s)+' '+k+': '+S.label)+'">'+S.icon+'</a></td>'}
     h+='</tr>'}
   $('matrix').innerHTML=h+'</tbody>';
-  const a=availKPI(wk);
-  $('matrixSub').textContent='Columns are the priority SKUs. Stores that did not report in '+wk+' are hidden. '+a.reported+' of '+a.total+' cells reported'+(pw?'; arrows compare with '+pw:'')+'.';
-  $('cellDetail').innerHTML='Click a cell for the exact SKU, status, store comment and the change since the previous week.';
-}
-function renderComp(){
-  const cw=compWeekFor(ST.wk);$('compWk').textContent=cw||'';
-  if(!cw){$('compTbl').innerHTML='';$('compSub').textContent='No competitor data up to this week.';return}
-  const rows=compRows(cw),cs=compStores(cw),stale=M.log.stale.filter(o=>o.wk===cw&&o.brand!=='Samsung');
-  $('compSub').innerHTML='Competitor rows in '+cw+' come from '+cs.length+' of '+M.stores.length+' stores ('+esc(cs.map(short).join(', '))+'), so this is not a network view.'+
-    (stale.length?' <span class="flag">⚑</span> '+stale.length+' row'+(stale.length>1?'s':'')+' left out as probably carried over from an earlier week ('+esc(stale.map(o=>short(o.store)+' '+o.brand+' '+o.key).join(', '))+').':'');
-  const ti=rankGroup(rows,o=>o.inc)[0],tr=rankGroup(rows.filter(o=>o.basis==='action'),o=>o.ratio)[0],td=rankGroup(rows,o=>o.disc)[0];
-  const line=(lab,g,val)=>g?'<tr><td>'+lab+'</td><td><b>'+esc(g.o.brand)+'</b> '+esc(g.o.key)+' <span class="chip">'+catName(g.o.cat)+'</span></td><td>'+esc(g.stores.join(', '))+'</td><td class="num hl">'+val(g)+'</td></tr>':'';
-  $('compTbl').innerHTML='<thead><tr><th>What</th><th>Brand / model</th><th>Store</th><th style="text-align:right">Value</th></tr></thead><tbody>'+
-    line('Highest salesperson incentive',ti,g=>fmtKc(g.v))+line('Highest incentive vs price',tr,g=>fmtPct(g.v))+line('Deepest shelf discount',td,g=>fmtPct(g.v)+' ('+fmtKc(g.o.discAbs)+' off)')+'</tbody>';
+  const nr=M.stores.filter(s=>!reported(wk,s));
+  $('matrixSub').textContent='8 stores × 4 priority SKUs in '+wk+(nr.length?'. Not reported: '+nr.map(short).join(', ')+' (n/a)':'')+'.';
 }
 function renderInsights(){
-  const wk=ST.wk,pw=prevWeek(wk),g=gapKPI(wk),cw=compWeekFor(wk),I=[];
-  const gaps=g.na.concat(g.bl);
-  if(gaps.length){
-    const rec=gaps.map(o=>({o,s:absentStreak(o)})).filter(x=>x.s.n>=2).sort((a,b)=>b.s.n-a.s.n);
-    I.push({u:'crit',ic:'alert',h:'Priority models unavailable',big:gaps.length,
-      t:gaps.slice(0,4).map(o=>esc(short(o.store))+' '+esc(o.key)).join('; ')+(gaps.length>4?' and '+(gaps.length-4)+' more':'')+'.'+
-        (rec.length?' Recurring: '+rec.slice(0,2).map(x=>esc(short(x.o.store))+' '+esc(x.o.key)+' absent in '+x.s.n+' of '+x.s.of+' reports since '+x.s.since).join('; ')+'.':'')});
-  }else I.push({u:'info',ic:'alert',h:'No priority model gaps reported',big:0,t:'No N/A or blank priority rows in '+wk+'. Stores without a report are not counted.'});
-  const said=samRows(wk).filter(o=>o.note&&(o.status!=='ok'||o.pt));
-  if(said.length)I.push({u:'watch',ic:'chat',h:'What the stores say',big:said.length,
-    t:said.slice(0,4).map(o=>'<b>'+esc(short(o.store))+'</b> '+esc(o.key)+': <span class="cz">„'+esc(o.note)+'“</span>').join('<br>')+(said.length>4?'<br><span class="tiny">+ '+(said.length-4)+' more in the store table</span>':'')});
-  if(pw){const c=compareWeeks(pw,wk);
-    I.push({u:c.newGaps.length?'watch':'info',ic:'swap',h:pw+' → '+wk,big:'+'+c.newGaps.length+' / −'+c.resolved.length,
-      t:(c.newGaps.length?'New gaps: '+c.newGaps.slice(0,3).map(o=>esc(short(o.store))+' '+esc(o.key)).join(', ')+'. ':'No new gaps. ')+(c.resolved.length?'Resolved: '+c.resolved.slice(0,3).map(o=>esc(short(o.store))+' '+esc(o.key)).join(', ')+'. ':'')+c.recurring.length+' still unavailable.'+(c.incomplete?' '+c.incomplete+' pairs from fully blank store reports are not counted as changes.':'')})}
-  if(cw){const p=pressure(cw);
-    if(p&&p.mult)I.push({u:p.mult>=2?'crit':'watch',ic:'trend',h:'Competitor incentive pressure ('+cw+')',big:fmtX(p.mult),
-      t:esc(p.top.o.brand)+' '+esc(p.top.o.key)+' pays salespeople '+fmtKc(p.top.v)+' in '+esc(p.top.stores.join(', '))+', against Samsung’s top '+catName(p.top.o.cat)+' incentive of '+fmtKc(p.sam.inc)+' ('+esc(p.sam.key)+') in the same stores.'});
-    const d=rankGroup(compRows(cw),o=>o.disc)[0];
-    if(d){const cs=compStores(cw),sd=M.recs.filter(o=>o.wk===cw&&o.brand==='Samsung'&&o.cat===d.o.cat&&o.disc!=null&&cs.includes(o.store)).sort((a,b)=>b.disc-a.disc)[0];
-      I.push({u:'watch',ic:'tag',h:'Deepest competitor discount ('+cw+')',big:fmtPct(d.v),
-        t:esc(d.o.brand)+' '+esc(d.o.key)+' '+fmtInt(d.o.orig)+' → '+fmtInt(d.o.act)+' Kč in '+esc(d.stores.join(', '))+(sd?'; Samsung’s deepest '+catName(d.o.cat)+' discount there is '+fmtPct(sd.disc)+' ('+esc(sd.key)+').':'.')})}}
-  const bySt={};M.log.stale.filter(o=>o.wk===wk).forEach(o=>{(bySt[o.store]=bySt[o.store]||[]).push(o)});
-  for(const k in bySt)if(bySt[k].length<2&&bySt[k].every(o=>o.brand==='Samsung'))delete bySt[k];const st=Object.values(bySt).flat();
-  if(st.length)I.push({u:'watch',ic:'eye',h:'Figures that look copied from an earlier week',big:st.length,
-    t:Object.entries(bySt).map(([s,l])=>'<b>'+esc(short(s))+'</b>: '+l.length+' row'+(l.length>1?'s':'')+' identical to '+[...new Set(l.map(o=>o.stale.wk))].join('/')+' ('+esc(l.slice(0,3).map(o=>o.key).join(', '))+(l.length>3?', …':'')+')').join('<br>')+
-      '<br>Other stores report different figures for the same models this week. Worth checking with the store.'});
-  const miss=M.stores.filter(s=>!samRows(wk).some(o=>o.store===s));
-  if(miss.length)I.push({u:'info',ic:'eye',h:'Not reported in '+wk,big:miss.length,t:esc(miss.map(short).join(', '))+'. They are hidden from the matrix and the store table.'});
-  const order={crit:0,watch:1,info:2};I.sort((a,b)=>order[a.u]-order[b.u]);
-  $('insights').innerHTML=I.slice(0,7).map(x=>'<div class="insight '+x.u+'"><div class="symbol">'+svgI(x.ic)+'</div><div style="min-width:0;flex:1"><div class="hd"><b>'+esc(x.h)+'</b><span class="urg '+x.u+'">'+({crit:'Critical',watch:'Watch',info:'Info'})[x.u]+'</span><span class="big">'+x.big+'</span></div><p>'+x.t+'</p></div></div>').join('');
+  const wk=ST.wk,gaps=[];
+  for(const s of M.stores)for(const k of SKUS()){const c=cellState(ptRows(wk,s,k));if(c.s==='bad'||c.s==='warn')gaps.push({s,k,c})}
+  let h='<div class="block"><h3>Priority SKUs not on display <span class="n">'+gaps.length+'</span></h3>';
+  if(!gaps.length)h+='<div class="line">All reported priority SKUs are on display.</div>';
+  /* one line per store and comment: SKUs with the same reason are listed together */
+  const items=[];
+  for(const g of gaps){const r=g.c.rows.find(x=>x.status!=='ok')||g.c.rows[0],st=absentStreak(r),note=[...new Set(g.c.rows.map(x=>x.note).filter(Boolean))].join(' / ');
+    const it=items.find(x=>x.s===g.s&&x.note===note&&x.status===r.status);
+    if(it){it.k.push(g.k);it.st.push(st)}else items.push({s:g.s,k:[g.k],status:r.status,note,st:[st]})}
+  for(const it of items){const old=it.st.filter(x=>x.n>=2),since=old.length?old.map(x=>x.since).sort((a,b)=>M.weeks.indexOf(a)-M.weeks.indexOf(b))[0]:null;
+    h+='<div class="item"><div class="hd"><a href="#store/'+slug(it.s)+'">'+esc(short(it.s))+'</a><span class="sk">'+it.k.join(', ')+'</span>'+STATUSCHIP[it.status]+
+      (prevWeek(wk)?'<span class="since">'+(since?'missing since '+since:'new this week')+'</span>':'')+'</div>'+
+      (it.note?'<p class="cz">„'+esc(it.note)+'“</p>':'<p class="none">No comment from the store.</p>')+'</div>'}
+  h+='</div>';
+  const nr=M.stores.filter(s=>!reported(wk,s));
+  if(nr.length)h+='<div class="block"><h3>Not reported in '+wk+'</h3><div class="line">'+nr.map(s=>'<a class="storelink" style="font-size:13px" href="#store/'+slug(s)+'">'+esc(short(s))+'</a>').join(', ')+'</div></div>';
+  $('insights').innerHTML=h;
 }
 
-/* ===== SCREEN 2: STORE BY STORE ===== */
-const STATUSCHIP={ok:'<span class="chip ok">Available</span>',na:'<span class="chip bad">N/A</span>',blank:'<span class="chip bad">Not present</span>',stock:'<span class="chip warn">Stock only</span>'};
-function renderStoreChips(){
-  const wk=$('weekFilter').value,has=s=>M.recs.some(o=>o.wk===wk&&o.store===s);
-  $('storeChips').innerHTML='<span class="lbl">Store</span><button class="pill'+(!ST.store?' active':'')+'" data-store="">All stores</button>'+
-    M.stores.filter(has).map(s=>'<button class="pill'+(ST.store===s?' active':'')+'" data-store="'+esc(s)+'">'+esc(short(s))+'</button>').join('');
-  if(ST.store&&!has(ST.store))ST.store='';
+/* ===== STORE BY STORE ===== */
+function renderTabs(){
+  $('storeTabs').innerHTML=M.stores.map(s=>'<a class="pill'+(ST.view==='store'&&ST.store===s?' active':'')+(reported(ST.wk,s)?'':' na')+'" href="#store/'+slug(s)+'">'+esc(short(s))+'</a>').join('')+
+    '<span class="sep"></span><a class="pill'+(ST.view==='comp'?' active':'')+'" href="#competitors">Competitors</a>';
 }
-function renderStoreTable(){
-  const wk=$('weekFilter').value,b=$('brandFilter').value,q=$('search').value.trim().toLowerCase(),issues=$('issuesOnly').checked;
-  const rows=M.recs.filter(o=>o.wk===wk&&(!ST.store||o.store===ST.store)&&(!b||(b==='comp'?o.brand!=='Samsung':o.brand===b))&&
-    (!issues||o.status!=='ok'||o.note||o.flags.length)&&(!q||(o.brand+' '+o.sku+' '+o.key+' '+o.note).toLowerCase().includes(q)));
-  const cols=['Brand','SKU','Priority','Placement','Status','Original','Action','Discount','Incentive (Kč)','Store comment',''];
-  let h='<thead><tr>'+cols.map((c,i)=>'<th'+(i>=5&&i<=8?' class="r"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>';
-  const stores=M.stores.filter(s=>rows.some(o=>o.store===s));
-  for(const s of stores){
-    const r=rows.filter(o=>o.store===s).sort((x,y)=>(x.brand==='Samsung'?0:1)-(y.brand==='Samsung'?0:1)||x.cat.localeCompare(y.cat)||x.brand.localeCompare(y.brand)||x.key.localeCompare(y.key));
-    const sam=r.filter(o=>o.brand==='Samsung'),gap=sam.filter(o=>o.pt&&(o.status==='na'||o.status==='blank')).length;
-    h+='<tr class="grp"><td colspan="11"><span class="gname">'+esc(short(s))+'</span><span class="gmeta">'+esc(Object.keys(M.storeId).filter(k=>M.storeId[k]===s).join(', '))+' · '+sam.length+' Samsung · '+(r.length-sam.length)+' competitor rows'+(gap?' · <span class="dn">'+gap+' priority gap'+(gap>1?'s':'')+'</span>':'')+'</span></td></tr>';
-    let lastCat=null,lastSam=null;
-    for(const o of r){const isS=o.brand==='Samsung';
-      if(isS!==lastSam||o.cat!==lastCat){h+='<tr class="cat"><td colspan="11">'+(isS?'Samsung':'Competitors')+' · '+catName(o.cat)+'</td></tr>';lastCat=o.cat;lastSam=isS}
-      h+='<tr'+(isS?' class="sam"':'')+'><td>'+esc(o.brand)+'</td><td><b>'+esc(o.sku)+'</b></td><td>'+(o.pt?'<span class="chip ok">Priority</span>':'<span class="tiny">—</span>')+'</td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
-        '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r'+(o.disc>=25?' hl':'')+'">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
-        '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td><td>'+(o.flags.length?'<span class="flag" title="'+esc(o.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>'}
+function rowTable(rows,cols,rowFn){
+  let h='<table><thead><tr>'+cols.map(c=>'<th'+(c[1]?' class="r"':'')+'>'+c[0]+'</th>').join('')+'</tr></thead><tbody>';
+  let last=null;
+  for(const o of rows){const g=o._grp;if(g!==last){h+='<tr class="cat"><td colspan="'+cols.length+'">'+g+'</td></tr>';last=g}h+=rowFn(o)}
+  return h+'</tbody></table>';
+}
+function renderStore(){
+  const wk=ST.wk,s=ST.store,rows=M.recs.filter(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung');
+  const prio=SKUS().map(k=>{const c=cellState(ptRows(wk,s,k));return'<span class="chip '+({'s-ok':'ok','s-bad':'bad','s-warn':'warn','s-unk':'unk'})[STATE[c.s].cls]+'">'+STATE[c.s].icon+' '+k+'</span>'}).join('');
+  let h='<div class="shead"><div><div class="eyebrow">Store by store · '+wk+' · Samsung</div><h2>'+esc(short(s))+'</h2><div class="tiny">GSCM '+esc(Object.keys(M.storeId).find(k=>M.storeId[k]===s))+'</div></div><div class="prio">'+prio+'</div></div>';
+  if(!rows.length){$('storeView').innerHTML=h+'<div class="panel empty">'+esc(short(s))+' did not report in '+wk+' (n/a).</div>';renderMethod();return}
+  rows.forEach(o=>o._grp=(o.pt?'Priority SKUs':'Other Samsung SKUs · '+catName(o.cat)));
+  rows.sort((a,b)=>(a.pt?0:1)-(b.pt?0:1)||(a.pt?SKUS().indexOf(a.pt)-SKUS().indexOf(b.pt):0)||a.cat.localeCompare(b.cat)||a.key.localeCompare(b.key));
+  const cols=[['SKU'],['Placement'],['Status'],['Original',1],['Action',1],['Discount',1],['Incentive (Kč)',1],['Store comment'],['']];
+  h+='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,o=>'<tr'+(o.pt?' class="pri"':'')+'><td><b>'+esc(o.sku)+'</b></td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
+    '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
+    '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td><td>'+(o.flags.length?'<span class="flag" title="'+esc(o.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>')+'</div>';
+  $('storeView').innerHTML=h;renderMethod();
+}
+/* competitors: one line per product across stores; when stores differ, the value most stores report */
+function compProducts(wk){
+  const g=new Map();
+  for(const o of M.recs.filter(o=>o.wk===wk&&o.brand!=='Samsung')){const k=o.brand+'|'+o.key;(g.get(k)||g.set(k,[]).get(k)).push(o)}
+  const out=[];
+  for(const rows of g.values()){
+    const ok=rows.filter(o=>o.status==='ok'&&(o.orig!=null||o.act!=null||o.inc!=null)),pool=ok.filter(o=>!o.stale).length?ok.filter(o=>!o.stale):ok;
+    const trip=o=>[o.orig,o.act,o.inc].join('|'),cnt=new Map();pool.forEach(o=>cnt.set(trip(o),(cnt.get(trip(o))||[]).concat(o)));
+    const best=[...cnt.values()].sort((a,b)=>b.length-a.length||M.stores.indexOf(a[0].store)-M.stores.indexOf(b[0].store))[0];
+    const base=best?best[0]:rows[0],others=[...cnt.values()].filter(v=>v!==best);
+    const flags=[];if(others.length)flags.push('Stores report different figures; shown: the value of '+best.length+' of '+pool.length+' stores. Others: '+others.map(v=>v.map(o=>short(o.store)).join(', ')+' '+fmtInt(v[0].orig)+' / '+fmtInt(v[0].act)+' / '+fmtNum(v[0].inc)).join('; '));
+    if(rows.some(o=>o.stale))flags.push('Figures in '+rows.filter(o=>o.stale).map(o=>short(o.store)).join(', ')+' look copied from an earlier week; not used');
+    if(!ok.length)flags.push('Listed without figures');
+    out.push({brand:base.brand,key:base.key,sku:base.sku,cat:base.cat,orig:base.orig,act:base.act,inc:best?base.inc:null,disc:best?base.disc:null,discAbs:best?base.discAbs:null,ratio:best?base.ratio:null,basis:base.basis,
+      stores:[...new Set(rows.map(o=>short(o.store)))],flags,_grp:catName(base.cat)});
   }
-  $('storeTbl').innerHTML=h+'</tbody>';
-  const missing=M.stores.filter(s=>!M.recs.some(o=>o.wk===wk&&o.store===s));
-  $('count').textContent=rows.length+' rows in '+wk+(missing.length&&!ST.store?' · not reported this week: '+missing.map(short).join(', '):'')+' · ⚑ hover for the data note';
+  return out;
+}
+function renderComp(){
+  const wk=ST.wk,P=compProducts(wk),cs=[...new Set(M.recs.filter(o=>o.wk===wk&&o.brand!=='Samsung').map(o=>o.store))];
+  let h='<div class="shead"><div><div class="eyebrow">Store by store · '+wk+' · Competitors</div><h2>Competitors</h2><div class="tiny">'+(P.length?P.length+' products from '+cs.length+' of 8 stores ('+esc(cs.map(short).join(', '))+'). One line per product; when stores differ, the value most stores report.':'')+'</div></div></div>';
+  if(!P.length){$('storeView').innerHTML=h+'<div class="panel empty">No competitor data in '+wk+'.</div>';renderMethod();return}
+  const top=(f,filt)=>P.filter(p=>f(p)!=null&&(!filt||filt(p))).sort((a,b)=>f(b)-f(a))[0];
+  const ti=top(p=>p.inc),tr=top(p=>p.ratio,p=>p.basis==='action'),td=top(p=>p.disc);
+  const card=(k,p,v,d)=>p?'<div class="panel hcard"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d"><b>'+esc(p.brand)+'</b> '+esc(p.key)+' · '+catName(p.cat)+'<br><span class="tiny">'+esc(p.stores.join(', '))+(d?' · '+d:'')+'</span></div></div>':'';
+  h+='<div class="eyebrow" style="margin-bottom:10px">Competitor highlights</div><div class="highlights">'+
+    card('Highest salesperson incentive',ti,ti&&fmtKc(ti.inc))+card('Highest incentive vs price',tr,tr&&fmtPct(tr.ratio),tr&&fmtKc(tr.inc)+' on '+fmtKc(tr.act))+card('Deepest shelf discount',td,td&&fmtPct(td.disc),td&&fmtInt(td.orig)+' → '+fmtInt(td.act)+' Kč')+'</div>';
+  const brands=[...new Set(P.map(p=>p.brand))].sort();
+  h+='<div class="controls"><select id="cBrand" aria-label="Brand"><option value="">All brands</option>'+brands.map(b=>'<option'+(ST.cBrand===b?' selected':'')+'>'+esc(b)+'</option>').join('')+'</select><input id="cSearch" placeholder="Search SKU" aria-label="Search" value="'+esc(ST.cSearch||'')+'"></div><div id="compTable"></div>';
+  $('storeView').innerHTML=h;
+  const draw=()=>{const b=ST.cBrand=$('cBrand').value,q=(ST.cSearch=$('cSearch').value).trim().toLowerCase();
+    const rows=P.filter(p=>(!b||p.brand===b)&&(!q||(p.brand+' '+p.key+' '+p.sku).toLowerCase().includes(q))).sort((a,b)=>a.cat.localeCompare(b.cat)||a.brand.localeCompare(b.brand)||a.key.localeCompare(b.key));
+    const cols=[['Brand'],['SKU'],['Original',1],['Action',1],['Discount',1],['Incentive (Kč)',1],['Incentive vs price',1],['Stores'],['']];
+    $('compTable').innerHTML='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,p=>'<tr><td>'+esc(p.brand)+'</td><td><b>'+esc(p.sku)+'</b></td><td class="r">'+fmtInt(p.orig)+'</td><td class="r">'+fmtInt(p.act)+'</td><td class="r'+(p.disc>=25?' hl':'')+'">'+fmtPct(p.disc)+'</td><td class="r">'+fmtNum(p.inc)+'</td><td class="r">'+fmtPct(p.ratio)+'</td>'+
+      '<td class="tiny" title="'+esc(p.stores.join(', '))+'">'+(p.stores.length<=3?esc(p.stores.join(', ')):p.stores.length+' stores')+'</td><td>'+(p.flags.length?'<span class="flag" title="'+esc(p.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>')+'<div class="tiny" style="margin-top:10px">'+rows.length+' products · ⚑ hover for the data note</div></div>'};
+  $('cBrand').onchange=draw;$('cSearch').oninput=draw;draw();renderMethod();
 }
 
 /* ===== DATA NOTES ===== */
 function renderMethod(){
   const L=M.log,wks=M.weeks;
-  const cov='<div class="scroll"><table><thead><tr><th>Store</th><th>GSCM</th>'+wks.map(w=>'<th style="text-align:right">'+w+'</th>').join('')+'</tr></thead><tbody>'+
-    M.stores.map(s=>{const al=L.aliases[s]?' <span class="tiny">(also “'+[...L.aliases[s]].map(esc).join('”, “')+'”)</span>':'';
-      return'<tr><td>'+esc(s)+al+'</td><td>'+esc(Object.keys(M.storeId).filter(k=>M.storeId[k]===s).join(', '))+'</td>'+wks.map(w=>{const a=M.recs.filter(o=>o.wk===w&&o.store===s),sm=a.filter(o=>o.brand==='Samsung').length;
-        return'<td style="text-align:right">'+(a.length?sm+' / '+(a.length-sm):'<span class="tiny">—</span>')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div><div class="tiny">Samsung rows / competitor rows after cleaning.</div>';
-  const typos=M.recs.filter(o=>o.origBad).map(o=>o.wk+' '+short(o.store)+' '+o.sku+' ('+fmtInt(o.orig)+')');
-  const near=[...new Set(M.recs.filter(o=>o.nearPt).map(o=>o.key+' → '+o.nearPt+'?'))];
+  const cov='<div style="overflow:auto"><table><thead><tr><th>Store</th><th>GSCM</th>'+wks.map(w=>'<th style="text-align:right">'+w+'</th>').join('')+'</tr></thead><tbody>'+
+    M.stores.map(s=>{const al=L.aliases[s]?' <span class="tiny">(in the sheet as “'+[...L.aliases[s]].map(esc).join('”, “')+'”)</span>':'';
+      return'<tr><td>'+esc(s)+al+'</td><td>'+esc(Object.keys(M.storeId).find(k=>M.storeId[k]===s))+'</td>'+wks.map(w=>{const a=M.recs.filter(o=>o.wk===w&&o.store===s),sm=a.filter(o=>o.brand==='Samsung').length;
+        return'<td style="text-align:right">'+(a.length?sm+' / '+(a.length-sm):'<span class="tiny">n/a</span>')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div><div class="tiny">Samsung rows / competitor rows after cleaning.</div>';
+  const out=Object.entries(L.outStores);
   $('methodBody').innerHTML=
    '<h3>Rules</h3><ul>'+
-   '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only (amber). Blank or x with no figures = not present. No row for a store and SKU = not reported (grey, never red).</li>'+
-   '<li>Stores are matched by GSCM ID. Priority SKUs (matrix columns): '+CONFIG.prioritySkus.map(p=>p.sku+(p.also?' (also '+p.also.join(', ')+')':'')).join(', ')+'. Known typos read as the correct SKU: '+Object.entries(CONFIG.skuAliases).map(([a,b])=>a+' → '+b).join(', ')+'. A cell is green when the SKU is available, red when not, amber for stock only.</li>'+
-   '<li>Availability = cells with at least one available model / reported cells. Trends compare only cells reported in both weeks. Weeks are ordered by number, and W01, W02… after W52 count as the next year.</li>'+
-   '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+', which converts it to the money reward in CZK.</li>'+
-   '<li>Discount = (original − action) / original. Incentive vs price = incentive / action price. Discount (shelf) and incentive (salesperson) are never combined.</li>'+
+   '<li>The report covers 8 stores, matched by GSCM ID, from '+CONFIG.firstWeek+' on. Stores outside the list'+(out.length?' ('+out.map(e=>esc(e[0])).join(', ')+')':'')+' and earlier weeks are left out.</li>'+
+   '<li>Priority SKUs: '+CONFIG.prioritySkus.map(p=>p.sku+(p.also?' (also reported as '+p.also.join(', ')+')':'')).join(', ')+'. Known typos read as the correct SKU: '+Object.entries(CONFIG.skuAliases).map(([a,b])=>a+' → '+b).join(', ')+'.</li>'+
+   '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only. Blank or x with no figures = not present. No row = not reported (n/a, grey).</li>'+
+   '<li>Product availability = available cells / 32 (8 stores × 4 priority SKUs) in every week, so weeks compare on the same base; a store that did not report counts as not available.</li>'+
+   '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+' (reward in CZK). The incentive per priority SKU is the value most stores report, never an average; hover a value to see stores that report a different one.</li>'+
+   '<li>Competitors are shown across stores, one line per product; when stores report different figures, the figures most stores report are used.</li>'+
    '<li>Store comments are shown exactly as written. Numbers: space for thousands, comma for decimals.</li></ul>'+
    '<h3>Checks on this data</h3><ul>'+
-   '<li>'+M.rawCount+' sheet rows → '+M.recs.length+' cleaned rows. '+L.dupExact+' exact duplicates removed, '+L.dupMerged+' B / MB double entries merged'+(L.skipped?', '+L.skipped+' incomplete rows skipped':'')+'.</li>'+
-   (L.stale.length?'<li>Probably carried over from an earlier week (same figures as an older report while other stores differ): '+L.stale.map(o=>esc(o.wk+' '+short(o.store)+' '+o.brand+' '+o.key)).join('; ')+'. Shown in the store table, left out of competitor highlights.</li>':'')+
-   (L.dupConflict.length?'<li>Listed twice, once with figures and once without: '+L.dupConflict.map(o=>esc(o.wk+' '+short(o.store)+' '+o.key)).join(', ')+'. Kept as available. Please confirm.</li>':'')+
-   (L.bulkBlank.length?'<li>Whole-store blank reports: '+L.bulkBlank.map(b=>esc(b.wk+' '+short(b.store))).join('; ')+'. Counted as not present but probably a reporting gap.</li>':'')+
-   (typos.length?'<li>Probable price typos, excluded from discounts: '+typos.map(esc).join('; ')+'.</li>':'')+
-   (near.length?'<li>Possible SKU typos not matched to a priority SKU: '+near.map(esc).join('; ')+'.</li>':'')+
-   (L.newStores.length?'<li>Stores not in the store list, added by GSCM: '+L.newStores.map(esc).join('; ')+'.</li>':'')+
+   '<li>'+M.rawCount+' sheet rows; '+L.oldWeeks+' before '+CONFIG.firstWeek+' and '+out.reduce((a,e)=>a+e[1],0)+' from other stores left out; '+M.recs.length+' cleaned rows. '+L.dupExact+' exact duplicates removed, '+L.dupMerged+' B / MB double entries merged.</li>'+
+   (L.stale.length?'<li>Figures that look copied from an earlier week: '+L.stale.map(o=>esc(o.wk+' '+short(o.store)+' '+o.brand+' '+o.key)).join('; ')+'.</li>':'')+
+   (L.dupConflict.length?'<li>Listed twice, once with figures and once without: '+L.dupConflict.map(o=>esc(o.wk+' '+short(o.store)+' '+o.key)).join(', ')+'. Kept as available.</li>':'')+
+   (L.bulkBlank.length?'<li>Whole-store blank reports: '+L.bulkBlank.map(b=>esc(b.wk+' '+short(b.store))).join('; ')+'.</li>':'')+
    '</ul><h3>Coverage by store and week</h3>'+cov;
 }
 
 /* ===== EVENTS, START ===== */
-function showTip(btn,e){const t=$('tip');t.innerHTML=cellDetail(btn.dataset.s,btn.dataset.f);t.style.display='block';moveTip(e)}
 function moveTip(e){const t=$('tip'),w=t.offsetWidth,h=t.offsetHeight;let x=e.clientX+14,y=e.clientY+14;
   if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=Math.max(8,innerHeight-h-8);t.style.left=Math.max(8,x)+'px';t.style.top=y+'px'}
-function renderTop(){renderHeader();renderKPIs();renderMatrix();renderComp();renderInsights()}
 function start(D){
-  M=buildModel(D);
-  ST={wk:M.samWeeks[M.samWeeks.length-1],store:''};
-  $('weekFilter').innerHTML=M.weeks.slice().reverse().map(w=>'<option value="'+w+'">'+w+'</option>').join('');
-  $('weekFilter').value=ST.wk;
-  $('wkSeg').onclick=e=>{const b=e.target.closest('button');if(b){ST.wk=b.dataset.wk;renderTop();$('weekFilter').value=ST.wk;renderStoreChips();renderStoreTable()}};
-  $('storeChips').onclick=e=>{const b=e.target.closest('button');if(b){ST.store=b.dataset.store;renderStoreChips();renderStoreTable()}};
-  $('weekFilter').onchange=()=>{renderStoreChips();renderStoreTable()};
-  ['brandFilter','issuesOnly'].forEach(id=>$(id).onchange=renderStoreTable);$('search').oninput=renderStoreTable;
-  $('matrix').onclick=e=>{const b=e.target.closest('.cell');if(!b)return;document.querySelectorAll('#matrix .cell.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');$('cellDetail').innerHTML=cellDetail(b.dataset.s,b.dataset.f)};
-  $('matrix').onmouseover=e=>{const b=e.target.closest('.cell');if(b)showTip(b,e)};
+  M=buildModel(D);ST.wk=M.weeks[M.weeks.length-1];ST.store=M.stores[0];
+  $('wkSeg').onclick=e=>{const b=e.target.closest('button');if(b){ST.wk=b.dataset.wk;render()}};
+  $('matrix').onmouseover=e=>{const b=e.target.closest('.cell');if(b){$('tip').innerHTML=cellTip(b.dataset.s,b.dataset.k);$('tip').style.display='block';moveTip(e)}};
   $('matrix').onmousemove=e=>{if($('tip').style.display==='block')moveTip(e)};
   $('matrix').onmouseout=e=>{if(e.target.closest('.cell'))$('tip').style.display='none'};
-  renderTop();renderStoreChips();renderStoreTable();renderMethod();
+  $('matrix').onclick=()=>{$('tip').style.display='none'};
+  addEventListener('hashchange',route);route();
 }
 /* ===== PASSWORD (data are AES-GCM encrypted at build time; key from PBKDF2-SHA256) ===== */
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
@@ -533,7 +501,7 @@ async function decrypt(E,pw){
 async function boot(){
   const E=JSON.parse($('raw-data').textContent);
   if(!E.enc){start(E);return}
-  $('app').hidden=true;$('lock').hidden=false;
+  $('app').hidden=true;$('lock').hidden=false;$('pw').focus();
   const open=async pw=>{const D=await decrypt(E,pw);$('lock').hidden=true;$('app').hidden=false;start(D);
     try{sessionStorage.setItem('daf-pw',pw)}catch(e){}};
   try{const saved=sessionStorage.getItem('daf-pw');if(saved){try{await open(saved);return}catch(e){sessionStorage.removeItem('daf-pw')}}}catch(e){}
