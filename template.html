@@ -15,7 +15,9 @@ body.ov #app{height:100vh}
 .top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-top:22px;padding-bottom:14px}
 .top h1{font-size:30px;margin:6px 0 2px;letter-spacing:-1px}
 .muted{color:var(--muted)}.orange{color:var(--orange)}
-.updated{font-size:12px;color:var(--muted2);margin-top:4px}
+.updated{font-size:12px;color:var(--muted2);margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+button.pill.refresh{padding:3px 10px;font-size:12px}
+button.pill.refresh:disabled{opacity:.6;cursor:wait}
 .topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:14px}
 .logos{display:flex;align-items:center;gap:28px}
 .logos img{height:20px;width:auto;display:block;opacity:.95}
@@ -136,7 +138,7 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <header class="top wrap"><div><div class="eyebrow">Cheil · Retail intelligence / DATART</div>
 <h1>DA Flooring <span class="orange" id="wkTitle"></span></h1>
 <div class="muted">Samsung priority SKU availability in 8 DATART stores</div>
-<div class="updated" id="updated"></div></div>
+<div class="updated"><span id="updated"></span> <button class="pill refresh" id="refreshBtn" hidden>↻ Refresh data now</button> <span id="refreshMsg" class="tiny"></span></div></div>
 <div class="topright"><div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
 <div class="navrow"><div class="seg" id="wkSeg" role="group" aria-label="Week"></div>
 <div class="seg" role="tablist" aria-label="View"><a class="pill" id="navOv" href="#overview">Overview</a><a class="pill" id="navSt" href="#store">Store by store</a></div></div></div></header>
@@ -481,8 +483,31 @@ function renderMethod(){
 /* ===== EVENTS, START ===== */
 function moveTip(e){const t=$('tip'),w=t.offsetWidth,h=t.offsetHeight;let x=e.clientX+14,y=e.clientY+14;
   if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=Math.max(8,innerHeight-h-8);t.style.left=Math.max(8,x)+'px';t.style.top=y+'px'}
+/* manual refresh: starts the GitHub workflow that rebuilds the page from the sheet (token travels inside the encrypted data) */
+function setupRefresh(R){
+  if(!R||!R.token)return;const btn=$('refreshBtn'),msg=$('refreshMsg');btn.hidden=false;
+  const api='https://api.github.com/repos/'+R.repo+'/actions',H={Authorization:'Bearer '+R.token,Accept:'application/vnd.github+json'};
+  const say=t=>msg.innerHTML=t;
+  btn.onclick=async()=>{
+    btn.disabled=true;const t0=Date.now();say('Starting the update…');
+    try{
+      const r=await fetch(api+'/workflows/'+R.workflow+'/dispatches',{method:'POST',headers:H,body:JSON.stringify({ref:'main'})});
+      if(!r.ok)throw new Error('GitHub answered '+r.status);
+      say('Updating from the sheet, usually 1–2 minutes…');
+      for(let i=0;i<40;i++){await new Promise(z=>setTimeout(z,8000));
+        const j=await (await fetch(api+'/runs?event=workflow_dispatch&per_page=1',{headers:H,cache:'no-store'})).json(),run=j.workflow_runs&&j.workflow_runs[0];
+        if(!run||new Date(run.created_at).getTime()<t0-60000)continue;
+        if(run.status==='completed'){
+          if(run.conclusion!=='success'){say('The update failed. <a class="orange" target="_blank" rel="noopener" href="'+run.html_url+'">See details</a>');btn.disabled=false;return}
+          say('Done, reloading…');await new Promise(z=>setTimeout(z,20000));
+          location.replace(location.pathname+'?v='+Date.now()+location.hash);return}
+      }
+      say('Still running. Reload the page in a few minutes.');
+    }catch(e){say('Could not start the update ('+esc(e.message)+').')}
+    btn.disabled=false};
+}
 function start(D){
-  M=buildModel(D);ST.wk=M.weeks[M.weeks.length-1];ST.store=M.stores[0];
+  M=buildModel(D);setupRefresh(D.refresh);ST.wk=M.weeks[M.weeks.length-1];ST.store=M.stores[0];
   $('wkSeg').onclick=e=>{const b=e.target.closest('button');if(b){ST.wk=b.dataset.wk;render()}};
   $('matrix').onmouseover=e=>{const b=e.target.closest('.cell');if(b){$('tip').innerHTML=cellTip(b.dataset.s,b.dataset.k);$('tip').style.display='block';moveTip(e)}};
   $('matrix').onmousemove=e=>{if($('tip').style.display==='block')moveTip(e)};

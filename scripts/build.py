@@ -85,9 +85,13 @@ def main():
         values = fetch_values()
     rows = normalise(values)
     now = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Prague"))
-    data = json.dumps({"updated": now.strftime("%-d. %-m. %Y %H:%M"), "rows": rows},
-                      ensure_ascii=False, separators=(",", ":"))
     password = os.environ.get("PAGE_PASSWORD", "")
+    doc = {"updated": now.strftime("%-d. %-m. %Y %H:%M"), "rows": rows}
+    token = os.environ.get("DISPATCH_TOKEN", "")
+    if token and password:  # the refresh token is only ever published inside the encrypted data
+        doc["refresh"] = {"repo": os.environ.get("GITHUB_REPOSITORY", "seczresidence/DA-flooring"),
+                          "workflow": "update.yml", "token": token}
+    data = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
     if password:
         data = encrypt(data, password)
     elif os.environ.get("GITHUB_ACTIONS"):

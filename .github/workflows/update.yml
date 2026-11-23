@@ -49,6 +49,7 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           PAGE_PASSWORD: ${{ secrets.PAGE_PASSWORD }}
+          DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
         run: |
           pip install --quiet google-auth requests cryptography
           python scripts/build.py
