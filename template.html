@@ -21,6 +21,7 @@ button.pill.refresh:disabled{opacity:.6;cursor:wait}
 .topright{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:14px}
 .logos{display:flex;align-items:center;gap:28px}
 .logos img{height:20px;width:auto;display:block;opacity:.95}
+.top .logos{gap:36px}.top .logos img{height:30px}
 .navrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .seg{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .seg .lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
@@ -28,6 +29,9 @@ button.pill,a.pill{background:#1b2940;border:1px solid #34455e;border-radius:9px
 button.pill:hover,a.pill:hover{border-color:var(--orange)}
 button.pill.active,a.pill.active{background:var(--orange-d);color:#161b24;border-color:var(--orange-d);font-weight:800}
 .tabs a.pill{padding:8px 16px;font-weight:700}
+a.pill.nav{padding:10px 20px;font-size:14px;font-weight:800;background:#263856;border:1px solid #5b7398;color:#fff}
+a.pill.nav.active{background:var(--orange-d);border-color:var(--orange-d);color:#161b24}
+a.pill.comp{border:2px solid var(--orange);color:var(--orange);font-weight:800}a.pill.comp.active{color:#161b24}
 button.pill.na{opacity:.5}
 button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 .panel,.metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;min-width:0}
@@ -52,7 +56,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{color:#8ea0b7;font-size:10.5px;text-align:left;letter-spacing:.5px;text-transform:uppercase;background:var(--panel2);padding:10px;white-space:nowrap;font-weight:700}
 td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:middle}
-#matrix{height:100%}
 #matrix th{color:#f1f5fb;font-size:12px;font-weight:800;text-transform:none;letter-spacing:.3px;text-align:center;background:#1d2a42}
 #matrix th:first-child{text-align:left}
 #matrix td{padding:4px 6px;text-align:center}
@@ -60,12 +63,16 @@ td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:middle}
 .storelink{color:#f4f7fb;font-weight:800;font-size:14px;text-decoration:none;white-space:nowrap;border-bottom:1px dashed #4a5d7a}
 .storelink:hover{color:var(--orange);border-color:var(--orange)}
 .natag{font-size:10px;font-weight:800;color:var(--unk);background:var(--unk-bg);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
-.cell{display:inline-grid;place-items:center;width:100%;max-width:150px;min-height:30px;border-radius:8px;font-weight:800;border:0;cursor:pointer;font-family:inherit;font-size:14px;text-decoration:none}
-.cell:hover{outline:2px solid var(--orange)}
+.cell{display:inline-grid;place-items:center;width:100%;max-width:150px;min-height:32px;border-radius:8px;font-weight:900;border:0;cursor:pointer;font-family:inherit;font-size:15px}
+.cell:hover,.cell.sel{outline:2px solid #fff}
+.detailbox{margin-top:12px;padding:12px 14px;background:var(--panel2);border-radius:12px;font-size:13px;line-height:1.6;color:#c3cfdf}
+.detailbox .vr{padding:6px 0;border-top:1px solid var(--line2)}.detailbox .vr:first-of-type{border-top:0}
 .s-ok{background:var(--ok-bg);color:var(--ok)}.s-bad{background:var(--bad-bg);color:var(--bad)}
 .s-warn{background:var(--warn-bg);color:var(--warn)}.s-unk{background:var(--unk-bg);color:var(--unk)}
-.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#aab7c9;margin-top:12px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+#matrix .s-ok,.legend .s-ok{background:#1c8a63;color:#eafff6}#matrix .s-bad,.legend .s-bad{background:#b23a48;color:#fff0f1}
+#matrix .s-warn,.legend .s-warn{background:#c98a12;color:#fff8e6}#matrix .s-unk,.legend .s-unk{background:#3a475e;color:#d5deeb}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-size:13px;font-weight:650;color:#e6edf6;margin-top:12px}
+.dot{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:7px;vertical-align:-2px}
 .chip{display:inline-block;padding:2px 8px;border-radius:6px;background:#25354a;font-size:11.5px;color:#c8d6e7;white-space:nowrap}
 .chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}
 .chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.unk{background:var(--unk-bg);color:var(--unk)}
@@ -121,7 +128,7 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 .lockbox input{background:var(--panel2);color:var(--fg);border:1px solid #33425b;border-radius:9px;padding:12px;font:inherit}
 .lockbox button{padding:11px 14px;margin-top:6px}
 .lockerr{color:var(--bad);font-size:13px;min-height:20px}
-@media(max-height:860px){.top{padding-top:14px;padding-bottom:10px}.top h1{font-size:26px}.metric{padding:12px 20px}.metric b.v{font-size:26px;margin:2px 0}.inc .val{font-size:22px}.incs{margin-top:4px}#v-overview{gap:14px;padding-bottom:14px}.main>.panel{padding:14px 20px}.cell{min-height:26px}#matrix td{padding:3px 6px}#matrix th{padding:8px}.legend{margin-top:8px}.sub{margin-bottom:8px}}
+@media(max-height:860px){.top{padding-top:14px;padding-bottom:10px}.top h1{font-size:26px}.top .logos img{height:26px}.metric{padding:12px 20px}.metric b.v{font-size:26px;margin:2px 0}.inc .val{font-size:22px}.incs{margin-top:4px}#v-overview{gap:14px;padding-bottom:14px}.main>.panel{padding:14px 20px}.cell{min-height:26px}#matrix td{padding:3px 6px}#matrix th{padding:8px}.legend{margin-top:8px}.sub{margin-bottom:8px}}
 @media(max-width:1100px),(max-height:640px){body.ov #app{height:auto}.main{grid-template-columns:1fr}.fill{overflow:visible}#matrix{height:auto}}
 @media(max-width:800px){.metrics{grid-template-columns:1fr}.incs{grid-template-columns:repeat(2,1fr)}.highlights{grid-template-columns:1fr}.topright{align-items:flex-start}.navrow{justify-content:flex-start}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -141,15 +148,14 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <div class="updated"><span id="updated"></span> <button class="pill refresh" id="refreshBtn" hidden>↻ Refresh data now</button> <span id="refreshMsg" class="tiny"></span></div></div>
 <div class="topright"><div class="logos"><img src="assets/samsung.png" alt="Samsung"><img src="assets/cheil.png" alt="Cheil"></div>
 <div class="navrow"><div class="seg" id="wkSeg" role="group" aria-label="Week"></div>
-<div class="seg" role="tablist" aria-label="View"><a class="pill" id="navOv" href="#overview">Overview</a><a class="pill" id="navSt" href="#store">Store by store</a></div></div></div></header>
+<div class="seg" role="tablist" aria-label="View"><a class="pill nav" id="navOv" href="#overview">Overview</a><a class="pill nav" id="navSt" href="#store">Store by store</a></div></div></div></header>
 
 <section id="v-overview" class="wrap" aria-label="Overview">
 <div class="metrics" id="metrics"></div>
 <div class="main">
 <section class="panel"><h2>Priority model availability</h2>
 <div class="sub" id="matrixSub"></div>
-<div class="fill"><table id="matrix"></table></div>
-<div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Unavailable / not present</span><span><i class="dot s-warn"></i>Stock only</span><span><i class="dot s-unk"></i>Not reported (n/a)</span><span>Click a store for its detail</span></div>
+<div class="fill"><table id="matrix"></table><div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Unavailable / not present</span><span><i class="dot s-warn"></i>Stock only</span><span><i class="dot s-unk"></i>Not reported (n/a)</span><span class="tiny" style="font-weight:400">Store name opens its detail · click a cell for the reason</span></div><div class="detailbox" id="cellDetail"></div></div>
 </section>
 <aside class="panel sig"><h2>What matters this week</h2>
 <div class="sub">Why priority SKUs are missing, in the stores’ own words</div>
@@ -367,10 +373,11 @@ function renderMatrix(){
   for(const s of M.stores){const rep=reported(wk,s),href='#store/'+slug(s);
     h+='<tr><td><a class="storelink" href="'+href+'">'+esc(short(s))+'</a>'+(rep?'':'<span class="natag">n/a</span>')+'</td>';
     for(const k of SKUS()){const c=cellState(ptRows(wk,s,k)),S=STATE[c.s];
-      h+='<td><a class="cell '+S.cls+'" href="'+href+'" data-s="'+esc(s)+'" data-k="'+k+'" aria-label="'+esc(short(s)+' '+k+': '+S.label)+'">'+S.icon+'</a></td>'}
+      h+='<td><button class="cell '+S.cls+'" data-s="'+esc(s)+'" data-k="'+k+'" aria-label="'+esc(short(s)+' '+k+': '+S.label)+'">'+S.icon+'</button></td>'}
     h+='</tr>'}
   $('matrix').innerHTML=h+'</tbody>';
   const nr=M.stores.filter(s=>!reported(wk,s));
+  $('cellDetail').innerHTML='Click a product cell to see the SKU, status and the store’s comment here.';
   $('matrixSub').textContent='8 stores × 4 priority SKUs in '+wk+(nr.length?'. Not reported: '+nr.map(short).join(', ')+' (n/a)':'')+'.';
 }
 function renderInsights(){
@@ -396,7 +403,7 @@ function renderInsights(){
 /* ===== STORE BY STORE ===== */
 function renderTabs(){
   $('storeTabs').innerHTML=M.stores.map(s=>'<a class="pill'+(ST.view==='store'&&ST.store===s?' active':'')+(reported(ST.wk,s)?'':' na')+'" href="#store/'+slug(s)+'">'+esc(short(s))+'</a>').join('')+
-    '<span class="sep"></span><a class="pill'+(ST.view==='comp'?' active':'')+'" href="#competitors">Competitors</a>';
+    '<span class="sep"></span><a class="pill comp'+(ST.view==='comp'?' active':'')+'" href="#competitors">Competitors</a>';
 }
 function rowTable(rows,cols,rowFn){
   let h='<table><thead><tr>'+cols.map(c=>'<th'+(c[1]?' class="r"':'')+'>'+c[0]+'</th>').join('')+'</tr></thead><tbody>';
@@ -443,7 +450,7 @@ function renderComp(){
   const ti=top(p=>p.inc),tr=top(p=>p.ratio,p=>p.basis==='action'),td=top(p=>p.disc);
   const card=(k,p,v,d)=>p?'<div class="panel hcard"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d"><b>'+esc(p.brand)+'</b> '+esc(p.key)+' · '+catName(p.cat)+'<br><span class="tiny">'+esc(p.stores.join(', '))+(d?' · '+d:'')+'</span></div></div>':'';
   h+='<div class="eyebrow" style="margin-bottom:10px">Competitor highlights</div><div class="highlights">'+
-    card('Highest salesperson incentive',ti,ti&&fmtKc(ti.inc))+card('Highest incentive vs price',tr,tr&&fmtPct(tr.ratio),tr&&fmtKc(tr.inc)+' on '+fmtKc(tr.act))+card('Deepest shelf discount',td,td&&fmtPct(td.disc),td&&fmtInt(td.orig)+' → '+fmtInt(td.act)+' Kč')+'</div>';
+    card('Highest salesperson incentive',ti,ti&&fmtKc(ti.inc))+card('Highest incentive vs price',tr,tr&&fmtPct(tr.ratio),tr&&fmtKc(tr.inc)+' on '+fmtKc(tr.act))+card('Highest discount',td,td&&fmtPct(td.disc),td&&fmtInt(td.orig)+' → '+fmtInt(td.act)+' Kč')+'</div>';
   const brands=[...new Set(P.map(p=>p.brand))].sort();
   h+='<div class="controls"><select id="cBrand" aria-label="Brand"><option value="">All brands</option>'+brands.map(b=>'<option'+(ST.cBrand===b?' selected':'')+'>'+esc(b)+'</option>').join('')+'</select><input id="cSearch" placeholder="Search SKU" aria-label="Search" value="'+esc(ST.cSearch||'')+'"></div><div id="compTable"></div>';
   $('storeView').innerHTML=h;
@@ -512,7 +519,7 @@ function start(D){
   $('matrix').onmouseover=e=>{const b=e.target.closest('.cell');if(b){$('tip').innerHTML=cellTip(b.dataset.s,b.dataset.k);$('tip').style.display='block';moveTip(e)}};
   $('matrix').onmousemove=e=>{if($('tip').style.display==='block')moveTip(e)};
   $('matrix').onmouseout=e=>{if(e.target.closest('.cell'))$('tip').style.display='none'};
-  $('matrix').onclick=()=>{$('tip').style.display='none'};
+  $('matrix').onclick=e=>{const b=e.target.closest('.cell');if(!b)return;$('tip').style.display='none';document.querySelectorAll('#matrix .cell.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');$('cellDetail').innerHTML=cellTip(b.dataset.s,b.dataset.k)};
   addEventListener('hashchange',route);route();
 }
 /* ===== PASSWORD (data are AES-GCM encrypted at build time; key from PBKDF2-SHA256) ===== */
