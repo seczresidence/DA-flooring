@@ -1,1 +1,1 @@
-2026-11-23 15:44 Prague, run 19 (push)
+2026-11-23 15:58 Prague, run 20 (workflow_dispatch)
