@@ -365,7 +365,7 @@ function renderKPIs(){
 }
 function cellTip(store,sku){
   const wk=ST.wk,c=cellState(ptRows(wk,store,sku));
-  let h='<b>'+esc(short(store))+' · '+sku+'</b> · '+wk+' · <span class="chip '+({'s-ok':'ok','s-bad':'bad','s-warn':'warn','s-unk':'unk'})[STATE[c.s].cls]+'">'+STATE[c.s].label+'</span>';
+  let h='<b>'+esc(short(store))+' · '+sku+'</b> · '+wk+' · '+STATE[c.s].label;
   if(!c.rows.length)return h+'<div class="vr">No row for this store and SKU in '+wk+'.</div>';
   for(const r of c.rows)h+='<div class="vr">'+esc(r.sku)+' ['+esc(r.typ||'—')+'] · '+ROWSTAT[r.status]+(r.status==='ok'?' · '+fmtKc(r.act||r.orig)+(r.inc!=null?' · incentive '+fmtKc(r.inc):''):'')+(r.note?'<br><span class="cz">„'+esc(r.note)+'“</span>':'')+'</div>';
   return h;
@@ -394,7 +394,7 @@ function renderInsights(){
     const it=items.find(x=>x.s===g.s&&x.note===note&&x.status===r.status);
     if(it){it.k.push(g.k);it.st.push(st)}else items.push({s:g.s,k:[g.k],status:r.status,note,st:[st]})}
   for(const it of items){const old=it.st.filter(x=>x.n>=2),since=old.length?old.map(x=>x.since).sort((a,b)=>M.weeks.indexOf(a)-M.weeks.indexOf(b))[0]:null;
-    h+='<div class="item"><div class="hd"><a href="#store/'+slug(it.s)+'">'+esc(short(it.s))+'</a><span class="sk">'+it.k.join(', ')+'</span>'+STATUSCHIP[it.status]+
+    h+='<div class="item"><div class="hd"><a href="#store/'+slug(it.s)+'">'+esc(short(it.s))+'</a><span class="sk">'+it.k.join(', ')+'</span>'+
       (prevWeek(wk)?'<span class="since">'+(since?'missing since '+since:'new this week')+'</span>':'')+'</div>'+
       (it.note?'<p class="cz">„'+esc(it.note)+'“</p>':'<p class="none">No comment from the store.</p>')+'</div>'}
   h+='</div>';
@@ -421,10 +421,10 @@ function renderStore(){
   if(!rows.length){$('storeView').innerHTML=h+'<div class="panel empty">'+esc(short(s))+' did not report in '+wk+' (n/a).</div>';renderMethod();return}
   rows.forEach(o=>o._grp=(o.pt?'Priority SKUs':'Other Samsung SKUs · '+catName(o.cat)));
   rows.sort((a,b)=>(a.pt?0:1)-(b.pt?0:1)||(a.pt?SKUS().indexOf(a.pt)-SKUS().indexOf(b.pt):0)||a.cat.localeCompare(b.cat)||a.key.localeCompare(b.key));
-  const cols=[['SKU'],['Placement'],['Status'],['Original',1],['Action',1],['Discount',1],['Incentive (Kč)',1],['Store comment'],['']];
+  const cols=[['SKU'],['Placement'],['Status'],['Original price',1],['Discount price',1],['Discount %',1],['Incentive (CZK)',1],['Store comment']];
   h+='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,o=>'<tr'+(o.pt?' class="pri"':'')+'><td><b>'+esc(o.sku)+'</b></td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
-    '<td class="r">'+(o.origBad?'<span class="flag">'+fmtInt(o.orig)+'</span>':fmtInt(o.orig))+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
-    '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td><td>'+(o.flags.length?'<span class="flag" title="'+esc(o.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>')+'</div>';
+    '<td class="r">'+fmtInt(o.orig)+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
+    '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td></tr>')+'</div>';
   $('storeView').innerHTML=h;renderMethod();
 }
 /* competitors: one line per product across stores; when stores differ, the value most stores report */
@@ -459,9 +459,9 @@ function renderComp(){
   $('storeView').innerHTML=h;
   const draw=()=>{const b=ST.cBrand=$('cBrand').value,q=(ST.cSearch=$('cSearch').value).trim().toLowerCase();
     const rows=P.filter(p=>(!b||p.brand===b)&&(!q||(p.brand+' '+p.key+' '+p.sku).toLowerCase().includes(q))).sort((a,b)=>a.cat.localeCompare(b.cat)||a.brand.localeCompare(b.brand)||a.key.localeCompare(b.key));
-    const cols=[['Brand'],['SKU'],['Original',1],['Action',1],['Discount',1],['Incentive (Kč)',1],['Incentive vs price',1],['Stores'],['']];
+    const cols=[['Brand'],['SKU'],['Original price',1],['Discount price',1],['Discount %',1],['Incentive (CZK)',1],['Incentive vs price',1],['Stores']];
     $('compTable').innerHTML='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,p=>'<tr><td>'+esc(p.brand)+'</td><td><b>'+esc(p.sku)+'</b></td><td class="r">'+fmtInt(p.orig)+'</td><td class="r">'+fmtInt(p.act)+'</td><td class="r'+(p.disc>=25?' hl':'')+'">'+fmtPct(p.disc)+'</td><td class="r">'+fmtNum(p.inc)+'</td><td class="r">'+fmtPct(p.ratio)+'</td>'+
-      '<td class="tiny" title="'+esc(p.stores.join(', '))+'">'+(p.stores.length<=3?esc(p.stores.join(', ')):p.stores.length+' stores')+'</td><td>'+(p.flags.length?'<span class="flag" title="'+esc(p.flags.join(' · '))+'">⚑</span>':'')+'</td></tr>')+'<div class="tiny" style="margin-top:10px">'+rows.length+' products · ⚑ hover for the data note</div></div>'};
+      '<td class="tiny" title="'+esc(p.stores.join(', '))+'">'+(p.stores.length<=3?esc(p.stores.join(', ')):p.stores.length+' stores')+'</td></tr>')+'<div class="tiny" style="margin-top:10px">'+rows.length+' products</div></div>'};
   $('cBrand').onchange=draw;$('cSearch').oninput=draw;draw();renderMethod();
 }
 
