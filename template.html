@@ -116,10 +116,6 @@ td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:middle}
 .hcard .v{font-size:26px;font-weight:800;color:var(--orange);margin:6px 0 2px;font-variant-numeric:tabular-nums}
 .hcard .d{font-size:13px;color:#c3cfdf}
 .tiny{font-size:12px;color:#9dadc2}
-details.method{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 22px}
-details.method summary{cursor:pointer;font-weight:700}
-details.method h3{font-size:13px;margin:18px 0 8px;color:var(--orange)}
-details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 #tip{position:fixed;z-index:50;max-width:380px;background:#0e1626;border:1px solid #34455e;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;box-shadow:0 8px 30px #000a;pointer-events:none;display:none}
 #tip .vr{padding:6px 0;border-top:1px solid var(--line2)}
 /* ---- lock ---- */
@@ -168,7 +164,6 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <section id="v-stores" class="wrap" aria-label="Store by store" hidden>
 <div class="tabs" id="storeTabs" role="tablist"></div>
 <div id="storeView"></div>
-<details class="method"><summary>Data notes, rules and checks</summary><div id="methodBody"></div></details>
 </section>
 </div>
 <div id="tip" role="tooltip"></div>
@@ -418,14 +413,14 @@ function renderStore(){
   const wk=ST.wk,s=ST.store,rows=M.recs.filter(o=>o.wk===wk&&o.store===s&&o.brand==='Samsung');
   const prio=SKUS().map(k=>{const c=cellState(ptRows(wk,s,k));return'<span class="chip '+({'s-ok':'ok','s-bad':'bad','s-warn':'warn','s-unk':'unk'})[STATE[c.s].cls]+'">'+STATE[c.s].icon+' '+k+'</span>'}).join('');
   let h='<div class="shead"><div><div class="eyebrow">Store by store · '+wk+' · Samsung</div><h2>'+esc(short(s))+'</h2><div class="tiny">GSCM '+esc(Object.keys(M.storeId).find(k=>M.storeId[k]===s))+'</div></div><div class="prio">'+prio+'</div></div>';
-  if(!rows.length){$('storeView').innerHTML=h+'<div class="panel empty">'+esc(short(s))+' did not report in '+wk+' (n/a).</div>';renderMethod();return}
+  if(!rows.length){$('storeView').innerHTML=h+'<div class="panel empty">'+esc(short(s))+' did not report in '+wk+' (n/a).</div>';return}
   rows.forEach(o=>o._grp=(o.pt?'Priority SKUs':'Other Samsung SKUs · '+catName(o.cat)));
   rows.sort((a,b)=>(a.pt?0:1)-(b.pt?0:1)||(a.pt?SKUS().indexOf(a.pt)-SKUS().indexOf(b.pt):0)||a.cat.localeCompare(b.cat)||a.key.localeCompare(b.key));
   const cols=[['SKU'],['Placement'],['Status'],['Original price',1],['Discount price',1],['Discount %',1],['Incentive (CZK)',1],['Store comment']];
   h+='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,o=>'<tr'+(o.pt?' class="pri"':'')+'><td><b>'+esc(o.sku)+'</b></td><td><span class="chip">'+esc(o.typ||'—')+'</span></td><td>'+STATUSCHIP[o.status]+'</td>'+
     '<td class="r">'+fmtInt(o.orig)+'</td><td class="r">'+fmtInt(o.act)+'</td><td class="r">'+fmtPct(o.disc)+'</td><td class="r">'+fmtNum(o.inc)+'</td>'+
     '<td>'+(o.note?'<div class="note cz">„'+esc(o.note)+'“</div>':'<span class="tiny">—</span>')+'</td></tr>')+'</div>';
-  $('storeView').innerHTML=h;renderMethod();
+  $('storeView').innerHTML=h;
 }
 /* competitors: one line per product across stores; when stores differ, the value most stores report */
 function compProducts(wk){
@@ -448,7 +443,7 @@ function compProducts(wk){
 function renderComp(){
   const wk=ST.wk,P=compProducts(wk),cs=[...new Set(M.recs.filter(o=>o.wk===wk&&o.brand!=='Samsung').map(o=>o.store))];
   let h='<div class="shead"><div><div class="eyebrow">Store by store · '+wk+' · Competitors</div><h2>Competitors</h2><div class="tiny">'+(P.length?P.length+' products from '+cs.length+' of 8 stores ('+esc(cs.map(short).join(', '))+'). One line per product; when stores differ, the value most stores report.':'')+'</div></div></div>';
-  if(!P.length){$('storeView').innerHTML=h+'<div class="panel empty">No competitor data in '+wk+'.</div>';renderMethod();return}
+  if(!P.length){$('storeView').innerHTML=h+'<div class="panel empty">No competitor data in '+wk+'.</div>';return}
   const top=(f,filt)=>P.filter(p=>f(p)!=null&&(!filt||filt(p))).sort((a,b)=>f(b)-f(a))[0];
   const ti=top(p=>p.inc),tr=top(p=>p.ratio,p=>p.basis==='action'),td=top(p=>p.disc);
   const card=(k,p,v,d)=>p?'<div class="panel hcard"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d"><b>'+esc(p.brand)+'</b> '+esc(p.key)+' · '+catName(p.cat)+'<br><span class="tiny">'+esc(p.stores.join(', '))+(d?' · '+d:'')+'</span></div></div>':'';
@@ -462,32 +457,7 @@ function renderComp(){
     const cols=[['Brand'],['SKU'],['Original price',1],['Discount price',1],['Discount %',1],['Incentive (CZK)',1],['Incentive vs price',1],['Stores']];
     $('compTable').innerHTML='<div class="panel tbl" style="overflow:auto">'+rowTable(rows,cols,p=>'<tr><td>'+esc(p.brand)+'</td><td><b>'+esc(p.sku)+'</b></td><td class="r">'+fmtInt(p.orig)+'</td><td class="r">'+fmtInt(p.act)+'</td><td class="r'+(p.disc>=25?' hl':'')+'">'+fmtPct(p.disc)+'</td><td class="r">'+fmtNum(p.inc)+'</td><td class="r">'+fmtPct(p.ratio)+'</td>'+
       '<td class="tiny" title="'+esc(p.stores.join(', '))+'">'+(p.stores.length<=3?esc(p.stores.join(', ')):p.stores.length+' stores')+'</td></tr>')+'<div class="tiny" style="margin-top:10px">'+rows.length+' products</div></div>'};
-  $('cBrand').onchange=draw;$('cSearch').oninput=draw;draw();renderMethod();
-}
-
-/* ===== DATA NOTES ===== */
-function renderMethod(){
-  const L=M.log,wks=M.weeks;
-  const cov='<div style="overflow:auto"><table><thead><tr><th>Store</th><th>GSCM</th>'+wks.map(w=>'<th style="text-align:right">'+w+'</th>').join('')+'</tr></thead><tbody>'+
-    M.stores.map(s=>{const al=L.aliases[s]?' <span class="tiny">(in the sheet as “'+[...L.aliases[s]].map(esc).join('”, “')+'”)</span>':'';
-      return'<tr><td>'+esc(s)+al+'</td><td>'+esc(Object.keys(M.storeId).find(k=>M.storeId[k]===s))+'</td>'+wks.map(w=>{const a=M.recs.filter(o=>o.wk===w&&o.store===s),sm=a.filter(o=>o.brand==='Samsung').length;
-        return'<td style="text-align:right">'+(a.length?sm+' / '+(a.length-sm):'<span class="tiny">n/a</span>')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div><div class="tiny">Samsung rows / competitor rows after cleaning.</div>';
-  const out=Object.entries(L.outStores);
-  $('methodBody').innerHTML=
-   '<h3>Rules</h3><ul>'+
-   '<li>The report covers 8 stores, matched by GSCM ID, from '+CONFIG.firstWeek+' on. Stores outside the list'+(out.length?' ('+out.map(e=>esc(e[0])).join(', ')+')':'')+' and earlier weeks are left out.</li>'+
-   '<li>Priority SKUs: '+CONFIG.prioritySkus.map(p=>p.sku+(p.also?' (also reported as '+p.also.join(', ')+')':'')).join(', ')+'. Known typos read as the correct SKU: '+Object.entries(CONFIG.skuAliases).map(([a,b])=>a+' → '+b).join(', ')+'.</li>'+
-   '<li>B or MB with at least one figure = available. Not on display = N/A, or blank / x with no figures. Stock = stock only (held, not on display). No row = not reported (n/a, grey).</li>'+
-   '<li>Product availability = available cells / 32 (8 stores × 4 priority SKUs) in every week, so weeks compare on the same base; a store that did not report counts as not available.</li>'+
-   '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+' (reward in CZK). The incentive per priority SKU is the value most stores report, never an average; hover a value to see stores that report a different one.</li>'+
-   '<li>Competitors are shown across stores, one line per product; when stores report different figures, the figures most stores report are used.</li>'+
-   '<li>Store comments are shown exactly as written. Numbers: space for thousands, comma for decimals.</li></ul>'+
-   '<h3>Checks on this data</h3><ul>'+
-   '<li>'+M.rawCount+' sheet rows; '+L.oldWeeks+' before '+CONFIG.firstWeek+' and '+out.reduce((a,e)=>a+e[1],0)+' from other stores left out; '+M.recs.length+' cleaned rows. '+L.dupExact+' exact duplicates removed, '+L.dupMerged+' B / MB double entries merged.</li>'+
-   (L.stale.length?'<li>Figures that look copied from an earlier week: '+L.stale.map(o=>esc(o.wk+' '+short(o.store)+' '+o.brand+' '+o.key)).join('; ')+'.</li>':'')+
-   (L.dupConflict.length?'<li>Listed twice, once with figures and once without: '+L.dupConflict.map(o=>esc(o.wk+' '+short(o.store)+' '+o.key)).join(', ')+'. Kept as available.</li>':'')+
-   (L.bulkBlank.length?'<li>Whole-store blank reports: '+L.bulkBlank.map(b=>esc(b.wk+' '+short(b.store))).join('; ')+'.</li>':'')+
-   '</ul><h3>Coverage by store and week</h3>'+cov;
+  $('cBrand').onchange=draw;$('cSearch').oninput=draw;draw();
 }
 
 /* ===== EVENTS, START ===== */
