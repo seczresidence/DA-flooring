@@ -158,7 +158,7 @@ details.method li{margin:5px 0;line-height:1.6;font-size:13px;color:#b6c3d6}
 <div class="main">
 <section class="panel"><h2>Priority model availability</h2>
 <div class="sub" id="matrixSub"></div>
-<div class="fill"><table id="matrix"></table><div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Unavailable / not present</span><span><i class="dot s-warn"></i>Stock only</span><span><i class="dot s-unk"></i>Not reported (n/a)</span><span class="tiny" style="font-weight:400">Store name opens its detail · click a cell for the reason</span></div><div class="detailbox" id="cellDetail"></div></div>
+<div class="fill"><table id="matrix"></table><div class="legend"><span><i class="dot s-ok"></i>Available</span><span><i class="dot s-bad"></i>Not on display</span><span><i class="dot s-warn"></i>Stock only</span><span><i class="dot s-unk"></i>Not reported (n/a)</span><span class="tiny" style="font-weight:400">Store name opens its detail · click a cell for the reason</span></div><div class="detailbox" id="cellDetail"></div></div>
 </section>
 <aside class="panel sig"><h2>What matters this week</h2>
 <div class="sub">Why priority SKUs are missing, in the stores’ own words</div>
@@ -297,10 +297,10 @@ function buildModel(D){
 }
 
 /* ===== ANALYTICS ===== */
-const STATE={ok:{cls:'s-ok',label:'Available',icon:'✓'},bad:{cls:'s-bad',label:'Unavailable',icon:'✕'},
+const STATE={ok:{cls:'s-ok',label:'Available',icon:'✓'},bad:{cls:'s-bad',label:'Not on display',icon:'✕'},
   warn:{cls:'s-warn',label:'Stock only',icon:'!'},unk:{cls:'s-unk',label:'Not reported (n/a)',icon:'–'}};
-const ROWSTAT={ok:'Available',na:'Unavailable (N/A)',blank:'Not present',stock:'Stock only, not on display'};
-const STATUSCHIP={ok:'<span class="chip ok">Available</span>',na:'<span class="chip bad">N/A</span>',blank:'<span class="chip bad">Not present</span>',stock:'<span class="chip warn">Stock only</span>'};
+const ROWSTAT={ok:'Available',na:'Not on display',blank:'Not on display',stock:'Stock only, not on display'};
+const STATUSCHIP={ok:'<span class="chip ok">Available</span>',na:'<span class="chip bad">Not on display</span>',blank:'<span class="chip bad">Not on display</span>',stock:'<span class="chip warn">Stock only</span>'};
 const SKUS=()=>CONFIG.prioritySkus.map(p=>p.sku);
 let M,ST={wk:null,view:'overview',store:null};
 const prevWeek=wk=>{const i=M.weeks.indexOf(wk);return i>0?M.weeks[i-1]:null};
@@ -477,7 +477,7 @@ function renderMethod(){
    '<h3>Rules</h3><ul>'+
    '<li>The report covers 8 stores, matched by GSCM ID, from '+CONFIG.firstWeek+' on. Stores outside the list'+(out.length?' ('+out.map(e=>esc(e[0])).join(', ')+')':'')+' and earlier weeks are left out.</li>'+
    '<li>Priority SKUs: '+CONFIG.prioritySkus.map(p=>p.sku+(p.also?' (also reported as '+p.also.join(', ')+')':'')).join(', ')+'. Known typos read as the correct SKU: '+Object.entries(CONFIG.skuAliases).map(([a,b])=>a+' → '+b).join(', ')+'.</li>'+
-   '<li>B or MB with at least one figure = available. N/A = unavailable. Stock = stock only. Blank or x with no figures = not present. No row = not reported (n/a, grey).</li>'+
+   '<li>B or MB with at least one figure = available. Not on display = N/A, or blank / x with no figures. Stock = stock only (held, not on display). No row = not reported (n/a, grey).</li>'+
    '<li>Product availability = available cells / 32 (8 stores × 4 priority SKUs) in every week, so weeks compare on the same base; a store that did not report counts as not available.</li>'+
    '<li>Incentive = the value in the sheet divided by '+CONFIG.incentiveDivisor+' (reward in CZK). The incentive per priority SKU is the value most stores report, never an average; hover a value to see stores that report a different one.</li>'+
    '<li>Competitors are shown across stores, one line per product; when stores report different figures, the figures most stores report are used.</li>'+
